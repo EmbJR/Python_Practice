@@ -1,6 +1,7 @@
 import numpy as np
 
-Path = "/storage/emulated/0/Documents/Practices/Git Repo for Python test/Python/TFile.txt"
+#Path = "/storage/emulated/0/Documents/Practices/Git Repo for Python test/Python/TFile.txt"
+Path = "TFile.txt"
 
 listitem = []
 
