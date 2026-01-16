@@ -156,6 +156,15 @@ print(a is b)
 print(a is not c)
 print(a is not b)
 
+var = (10,20,30,40)
+a = 10
+b = 20
+print ((a,b), "in", var, ":", (a,b) in var)
+var = ((10,20),30,40)
+a = 10
+b = 20
+print ((a,b), "in", var, ":", (a,b) in var)
+
 # Python Operators Precedence
 '''
 Operators precedence decides the order of the evaluation in which an operator is
@@ -188,3 +197,74 @@ c=(6+4j)*((3-2j)/(3+2j))*(3-2j)
 c=(18-12j+12j+8)/(9-6j+6j+4)
 c=26/13
 c=2+0j
+
+
+#-------------------------------------------------------------
+'''Although complex object is a number data type in Python, its behavior is different from
+others. Python doesn't support < and > operators, however it does support equality (==)
+and inequality (!=) operators.
+Example'''
+
+print ("comparison of complex numbers")
+a=10+1j
+b=10.-1j
+print ("a=",a, "b=",b,"a==b is",a==b)
+print ("a=",a, "b=",b,"a!=b is",a!=b)
+#print ("a=",a, "b=",b,"a<b is",a<b) # will not work
+#print ("a=",a, "b=",b,"a>b is",a>b) # will not work
+
+#-------------------------------------------------------------------
+'''Comparison of Sequence Types
+In Python, comparison of only similar sequence objects can be performed. A string object
+is comparable with another string only. A list cannot be compared with a tuple, even if
+both have same items. 
+Example'''
+print ("comparison of different sequence types")
+a=(1,2,3)
+b=[1,2,3]
+#print ("a=",a, "b=",b,"a<b is",a<b)
+
+# Example 2
+a=(1,2,4)
+b=(1,2,3)
+print ("a=",a, "b=",b,"a<b is",a<b)
+print ("a=",a, "b=",b,"a>b is",a>b)
+print ("a=",a, "b=",b,"a==b is",a==b)
+print ("a=",a, "b=",b,"a!=b is",a!=b)
+
+# Comparison of Dictionary Objects
+'''
+The use of "<" and ">" operators for Python's dictionary is not defined. In case of these
+operands, TypeError: '<' not supported between instances of 'dict' and 'dict' is reported.
+Equality comparison checks if the length of both the dict items is same. Length of
+dictionary is the number of key-value pairs in it.
+Python dictionaries are simply compared by length. The dictionary with fewer elements is
+considered less than a dictionary with more elements.
+'''
+print ("comparison of dictionary objects")
+a={1:1,2:2}
+b={2:2, 1:1, 3:3}
+print ("a=",a, "b=",b,"a==b is",a==b)
+print ("a=",a, "b=",b,"a!=b is",a!=b)
+
+# Python Logical Operators
+age = 30
+percentage = 85
+marks = 90
+attendance = 80
+if age > 16 and marks > 80:
+    print("Eligible for scholarship")
+if percentage < 50 or attendance < 75:
+    print("Not eligible for exam")
+'''Along with the keyword False, Python interprets None, numeric zero of all types, and
+empty sequences (strings, tuples, lists), empty dictionaries, and empty sets as False. All
+other values are treated as True'''
+
+x = 10
+y = 20
+gx = x & y
+vx = x | y
+print(gx, vx)
+g = a and b
+v = a or b
+print(g, v)
