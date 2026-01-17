@@ -165,6 +165,16 @@ a = 10
 b = 20
 print ((a,b), "in", var, ":", (a,b) in var)
 
+''' Membership Operator with Dictionaries
+Use of in as well as not in operators with dictionary object is allowed. However, Python
+checks the membership only with the collection of keys and not values.
+'''
+var = {1:10, 2:20, 3:30}
+a = 2
+b = 20
+print (a, "in", var, ":", a in var)
+print (b, "in", var, ":", b in var)
+
 # Python Operators Precedence
 '''
 Operators precedence decides the order of the evaluation in which an operator is
