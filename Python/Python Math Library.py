@@ -4,60 +4,59 @@ Theoretic and Representation Functions Python includes following theoretic and r
 Sr.No.                     Function & Description
 -------------------------------------------------------------------------- 
 1                                    math.ceil(x)
-                              The ceiling of x: the smallest integer not less than x
- 2                             math.comb(n,k)  
-                               This function is used to find the returns the number of ways to choose "x" items from "y" items without repetition and without order.
- 3                               math.copysign(x, y)  
-                               This function returns a float with the magnitude (absolute value of x but the sign of y. 
- 4                               math.cmp(x, y)  
-                               This function is used to compare the values of to objects. 
-                               This function is deprecated in Python3. 
- 5                               math.fabs(x)  
-                               This function is used to calculate the absolute value of a given integer. 
- 6                                math.factorial(n) 
-                               This function is used to find the factorial of a given integer. 
- 7                                  math.floor(x)  
+                                The ceiling of x: the smallest integer not less than x
+2                                   math.comb(n,k)  
+                                This function is used to find the returns the number of ways to choose "x" items from "y" items without repetition and without order.
+3                                   math.copysign(x, y)  
+                                This function returns a float with the magnitude (absolute value of x but the sign of y. 
+4                                   math.cmp(x, y)  
+                                This function is used to compare the values of to objects. 
+                                This function is deprecated in Python3. 
+5                                   math.fabs(x)  
+                                This function is used to calculate the absolute value of a given integer. 
+6                                   math.factorial(n) 
+                                This function is used to find the factorial of a given integer. 
+7                                   math.floor(x)  
                                 This function calculates the floor value of a given integer. 
- 8                                    math.fmod(x, y)
+8                                   math.fmod(x, y)
                                 The fmod() function in math module returns same result as the "%" operator. However fmod() gives more accurate result of modulo division than modulo operator. 
- 9                                    math.frexp(x)  
-                                 This function is used to calculate the mantissa and exponent of a given number. 
- 10                                   math.fsum(iterable)  
-                                  This function returns the floating point sum of all numeric items in an iterable i.e. list, tuple, array. 
- 11                                  math.gcd(*integers)  
-                                  This function is used to calculate the greatest common divisor of all the given integers. 
- 12                                    math.isclose()  
-                                   This function is used to determine whether two given numeric values are close to each other. 
-  13                                   math.isfinite(x)
-                                    This function is used to determine whether the given number is a finite number. 
-  14                                    math.isinf(x) 
-                                    This function is used to determine whether the given value is infinity (+ve or, -ve). 
-  15                                    math.isnan(x) 
-                                     This function is used to determine whether the given number is "NaN". 
-  16                                    math.isqrt(n) 
-                                     This function calculates the integer square-root of the given non negative integer. 
-  17                                    math.lcm(*integers)  
-                                     This function is used to calculate the least common factor of the given integer arguments. 
- 18                                      math.ldexp(x, i) 
-                                      This function returns product of first number with exponent of second number. So, ldexp(x,y) returns x*2**y. This is inverse of frexp() function. 
- 19                                       math.modf(x)
-                                      This returns the fractional and integer parts of x in a two-item tuple. 
-20                                         math.nextafter(x, y, steps)  
-                                       This function returns the next floating-point value after x towards y. 
-21                                         math.perm(n, k)  
-                                        This function is used to calculate the permutation. It returns the number of ways to choose x items from y items without repetition and with order. 
-22                                         math.prod(iterable, *, start)  
-                                        This function is used to calculate the product of all numeric items in the iterable (list, tuple) given as argument. 
-23                                         math.remainder(x,y)  
-                                        This function returns the remainder of x with respect to y. 
-                                        This is the difference x − n*y, where n is the integer closest to the quotient x / y.
-24                                         math.trunk(x)
-                                        This function returns integral part of the number, removing the fractional part. trunc() is equivalent to floor() for positive x, and equivalent to ceil() for negative x. 
-25                                         math.ulp(x)  
-                                        This function returns the value of the least significant bit of the float x. trunc() is equivalent to floor() for positive x, and equivalent to ceil() for negative x.
-                                        
-#-------------------------------------------------------------------------------------------------------------
-Power and Logarithmic Functions 
+9                                   math.frexp(x)  
+                                This function is used to calculate the mantissa and exponent of a given number. 
+10                                  math.fsum(iterable)  
+                                This function returns the floating point sum of all numeric items in an iterable i.e. list, tuple, array. 
+11                                  math.gcd(*integers)  
+                                This function is used to calculate the greatest common divisor of all the given integers. 
+12                                  math.isclose()  
+                                This function is used to determine whether two given numeric values are close to each other. 
+13                                  math.isfinite(x)
+                                This function is used to determine whether the given number is a finite number. 
+14                                  math.isinf(x) 
+                                This function is used to determine whether the given value is infinity (+ve or, -ve). 
+15                                  math.isnan(x) 
+                                This function is used to determine whether the given number is "NaN". 
+16                                  math.isqrt(n) 
+                                This function calculates the integer square-root of the given non negative integer. 
+17                                  math.lcm(*integers)  
+                                This function is used to calculate the least common factor of the given integer arguments. 
+18                                  math.ldexp(x, i) 
+                                This function returns product of first number with exponent of second number. So, ldexp(x,y) returns x*2**y. This is inverse of frexp() function. 
+19                                  math.modf(x)
+                                This returns the fractional and integer parts of x in a two-item tuple. 
+20                                  math.nextafter(x, y, steps)  
+                                This function returns the next floating-point value after x towards y. 
+21                                  math.perm(n, k)  
+                                This function is used to calculate the permutation. It returns the number of ways to choose x items from y items without repetition and with order. 
+22                                  math.prod(iterable, *, start)  
+                                This function is used to calculate the product of all numeric items in the iterable (list, tuple) given as argument. 
+23                                  math.remainder(x,y)  
+                                This function returns the remainder of x with respect to y. 
+                                This is the difference x − n*y, where n is the integer closest to the quotient x / y.
+24                                  math.trunc(x)
+                                This function returns integral part of the number, removing the fractional part. trunc() is equivalent to floor() for positive x, and equivalent to ceil() for negative x. 
+25                                  math.ulp(x)  
+                                This function returns the value of the least significant bit of the float x. trunc() is equivalent to floor() for positive x, and equivalent to ceil() for negative x.
+
+#----------------------------------Power and Logarithmic Functions -------------------------------------------
 Sr.No.      Function & Description 
 1                math.cbrt(x)  
                This function is used to calculate the cube root of a number. 
