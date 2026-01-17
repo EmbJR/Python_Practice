@@ -105,11 +105,36 @@ a = int("2A9", 16)
 print(a)
 
 #2 Python float() Function
+'''In Python, there is no restriction on how many digits after the decimal point can a floating
+point number have. However, to shorten the representation, the E or e symbol is used. E
+stands for Ten raised to. For example, E4 is 10 raised to 4 (or 4th power of 10), e-3 is 10
+raised to -3.
+In scientific notation, number has a coefficient and exponent part. The coefficient should
+be a float greater than or equal to 1 but less than 10. Hence, 1.23E+3, 9.9E-5, and 1E10
+are the examples of floats with scientific notation.
+'''
 a = float(9.99)
 print(type(a))
 
 g = float( "12.76")
 print(g)
+
+'''
+In mathematics, infinity is an abstract concept. Physically, infinitely large number can
+never be stored in any amount of memory. For most of the computer hardware
+configurations, however, a very large number with 400th power of 10 is represented by
+Inf. If you use "Infinity" as argument for float() function, it returns Inf
+'''
+a=1.00E400
+print (a, type(a))
+a=float("Infinity")
+
+'''
+One more such entity is Nan (stands for Not a Number). It represents any value that is
+undefined or not representable
+'''
+a=float("Nan")
+print(a)
 
 #3 Python str() Function
 a = str(10.4)
