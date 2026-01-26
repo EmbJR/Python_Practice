@@ -1,0 +1,36 @@
+>> Write the programm which takes the input from user for below values.
+	1. Name and 
+	2. Role Number.
+After taking the above input, the programm will ask user to short the values by
+	1. Alpha betically (A--Z)
+	2. Numerically (1,2....)
+After shorting the values, the programm will write the result in the text file.
+
+>> Make the stock price calculator which can able to take 2 inputs (Stock price amd Quantity) and then calculates the average buying price of the stock.
+Also storing the result in the text file with tabular like formating. Also the programm can accept the command to Buy/Sell the stocks and also display
+the history of the stock.
+
+>> Write the programm to read all above stock information from file and then ask user to enter the option to short the data by below order.
+	1. Short by name (A to Z and Vice-Versa).
+	2. Short by Stock prices (High to Low and Vice-Versa)
+	3. Short by Investment values (High to Low and Vice-Versa)
+	
+>> write the programm which can able to calculate the exact time period for which the user needs to pay the home loan.
+For this the programm will ask user for the below input.
+	1. What is the loan ammount.
+	2. What is the interest rate.
+	3. What is the monthly installment.
+Also the programm will store the information in file named by user.
+The programm can also take the monthly installment values from user and according to the selected plan stored by user it will instantly
+shows iser how much loan ammount is pending and how much time period pending.
+
+>> Write the python code which takes inputs from the user for searching the perticular string/variables from the text file.
+User can enter as many strings to search and programm should only display the string which only includes all of the user entered strings.
+
+>> Write the programm which can able to remind the user for any perticular tasks. For that it asks user to input below things.
+	1. Taks to be done.
+	2. Frequenc of the task (Ex. daily, weekly, monthly, yearly..)
+	3. Date and Time of the task according to the above selected values.
+	4. Reminder Tone selecter / Any output selection.
+
+
