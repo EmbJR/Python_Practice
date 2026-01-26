@@ -94,3 +94,27 @@ def myfunction():
 myfunction()
 print ("var1:",var1, "var2:",var2) #shows global variables with changed values
 
+'''
+     Python makes educated guesses on whether variables are local or global. It
+    assumes that any variable assigned a value in a function is local.
+
+     In order to assign a value to a global variable within a function, you must first use
+    the global statement.
+
+     The statement global VarName tells Python that VarName is a global variable.
+    Python stops searching the local namespace for the variable.
+
+Example:- For example, we define a variable Money in the global namespace. Within the function
+Money, we assign Money a value, therefore Python assumes Money as a local variable.
+However, we accessed the value of the local variable Money before setting it, so an
+UnboundLocalError is the result. Uncommenting the global statement fixes the problem.  
+'''
+
+Money = 2000
+def AddMoney():
+    # Uncomment the following line to fix the code:
+    global Money    # Tell Python to use the global variable Money
+    Money = Money + 1
+print (Money)
+AddMoney()
+print (Money)

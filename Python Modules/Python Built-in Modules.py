@@ -109,3 +109,70 @@ sequences −
 The module search path is stored in the system module sys as the sys.path variable. The
 sys.path variable contains the current directory, PYTHONPATH, and the installation-
 dependent default'''
+
+'''-------------------- Module Attributes --------------------
+In Python, a module is an object of module class, and hence it is characterized by
+attributes.
+Following are the module attributes −
+     __file__ returns the physical name of the module.
+     __package__ returns the package to which the module belongs.
+     __doc__ returns the docstring at the top of the module if any.
+     __dict__ returns the entire scope of the module
+     __name__ returns the name of the module
+Example:-
+'''
+print ("__file__ attribute:", mymodule.__file__)
+print ("__doc__ attribute:", mymodule.__doc__)
+print ("__name__ attribute:", mymodule.__name__)
+
+'''-------------------- The dir( ) Function --------------------
+The dir() built-in function returns a sorted list of strings containing the names defined by
+a module.
+The list contains the names of all the modules, variables and functions that are defined in
+a module. Following is a simple example'''
+# Import built-in module math
+import math
+content = dir(math)
+print (content)
+
+'''------------------ The reload() Function ------------------
+Sometimes you may need to reload a module, especially when working with the interactive
+interpreter session of Python.
+We can import the module and call its function from Python prompt as follows −
+"mymodule.sum(10,20)"
+However, suppose you need to modify the sum() function. Even if you edit the test.py file and save it, the function loaded in the memory won't
+update. You need to reload it, using reload() function in imp module as shown below −
+Example:-
+'''
+import importlib
+mymodule = importlib.reload(mymodule)
+print(mymodule.sum(10,20))
+
+'''------------------ Packages in Python ------------------
+A package is a hierarchical file directory structure that defines a single Python application
+environment that consists of modules, subpackages and, sub-subpackages, and so on.
+Consider a file Pots.py available in Phone directory. This file has following line of source
+code −
+    def Pots():
+    print "I'm Pots Phone"
+Similar way, we have another two files having different functions with the same name as
+above −
+     Phone/Isdn.py file having function Isdn()
+     Phone/G3.py file having function G3()
+Now, create one more file __init__.py in Phone directory −
+     Phone/__init__.py
+To make all of your functions available when you've imported Phone, you need to put
+explicit import statements in __init__.py as follows −
+    from Pots import Pots
+    from Isdn import Isdn
+    from G3 import G3
+After you add these lines to __init__.py, you have all of these classes available when you
+import the Phone package.
+Example:-
+# Now import your Phone Package.
+import Phone
+
+Phone.Pots()
+Phone.Isdn()
+Phone.G3()
+'''

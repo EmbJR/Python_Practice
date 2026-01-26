@@ -185,3 +185,4 @@ Sr.No.           Function & Description
                     round() is a built-in function in Python. It returns x rounded to n digits from the decimal point. 
 6                          Python sum() function  
                     The sum() function returns the sum of all numeric items in any iterable (list or tuple). It has an optional start argument which is 0 by default. If given, the numbers in the list are added to start value.                                        
+'''
