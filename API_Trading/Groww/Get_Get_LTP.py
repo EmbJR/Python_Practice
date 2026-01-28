@@ -41,4 +41,4 @@ for symbol in StockNamesPD:
         profit_loss = ((float(LTP_All_Stocks[symbolMod]) / float(AveragePrice.tolist()[0]))*100) - 100
         #print(type(LTP_All_Stocks))
         #print({symbol}, {LTP_All_Stocks}, {AveragePrice.tolist()[0]}, {Quantity.tolist()[0]}, profit_loss)
-        print({symbol}, profit_loss, '%')
+        print({symbol}, "           ", profit_loss, '%')
