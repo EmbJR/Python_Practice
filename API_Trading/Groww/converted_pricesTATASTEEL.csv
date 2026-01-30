@@ -1,0 +1,2 @@
+,trading_symbol,segment,credit_quantity,credit_price,debit_quantity,debit_price,carry_forward_credit_quantity,carry_forward_credit_price,carry_forward_debit_quantity,carry_forward_debit_price,exchange,symbol_isin,quantity,product,net_carry_forward_quantity,net_price,net_carry_forward_price,realised_pnl,Total_credit_Price,Total_debit_Price
+5,TATASTEEL,CASH,1,202.46,1,202.46,0,0.0,0,0.0,NSE,INE081A01020,0,MIS,0,202.46,0.0,0.0,202.46,202.46

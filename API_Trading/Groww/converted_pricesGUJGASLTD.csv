@@ -1,0 +1,2 @@
+,trading_symbol,segment,credit_quantity,credit_price,debit_quantity,debit_price,carry_forward_credit_quantity,carry_forward_credit_price,carry_forward_debit_quantity,carry_forward_debit_price,exchange,symbol_isin,quantity,product,net_carry_forward_quantity,net_price,net_carry_forward_price,realised_pnl,Total_credit_Price,Total_debit_Price
+0,GUJGASLTD,CASH,20,419.38,20,420.68,0,0.0,0,0.0,NSE,INE844O01030,0,MIS,0,420.68,0.0,26.05,8387.6,8413.6

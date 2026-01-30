@@ -1,0 +1,3 @@
+,trading_symbol,segment,credit_quantity,credit_price,debit_quantity,debit_price,carry_forward_credit_quantity,carry_forward_credit_price,carry_forward_debit_quantity,carry_forward_debit_price,exchange,symbol_isin,quantity,product,net_carry_forward_quantity,net_price,net_carry_forward_price,realised_pnl,Total_credit_Price,Total_debit_Price
+3,CSBBANK,CASH,3,418.3,0,0.0,0,0.0,0,0.0,BSE,INE679A01013,3,MIS,0,418.3,0.0,10.39,1254.9,0.0
+4,CSBBANK,CASH,2,427.6,5,424.1,0,0.0,0,0.0,NSE,INE679A01013,-3,MIS,0,424.1,0.0,10.39,855.2,2120.5
