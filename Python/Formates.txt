@@ -1,5 +1,5 @@
 
-- Treat below formating as "TJ1" formate
+- start of "TJ1" formating.
 #------- Trigonometric Functions ---------------------------------
 Sr.No.           Function & Description 
 ---------------------------------------------------------
@@ -19,3 +19,15 @@ Sr.No.           Function & Description
                     This function returns the tangent of x radians. 
 8                          math.hypot(x, y)  
                     This function returns the Euclidean norm, sqrt(x*x + y*y).
+------------------------------------------------------------------------------
+- end of "TJ1" formating.
+
+- start of "TJ2" formating.
+Python Expression           Results                         Description
+--------------------------------------------------------------------------
+[1, 2, 3] + [4, 5, 6]       [1, 2, 3, 4, 5, 6]              Concatenation
+['Hi!'] * 4                 ['Hi!', 'Hi!', 'Hi!', 'Hi!']    Repetition
+3 in [1, 2, 3]              TRUE                            Membership
+- end of "TJ2" formating.
+
+
