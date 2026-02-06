@@ -499,3 +499,227 @@ list1 = [17, 23, 46, 51, 90]
 print ("list before sort", list1)
 list1.sort(key=myfunction)
 print ("list after sort : ", list1)
+
+
+'''--------------------------- Copying a List in Python ---------------------
+Copying a list in Python refers to creating a new list that contains the same elements as
+the original list. There are different methods for copying a list, including, using slice
+notation, the list() function, and using the copy() method. '''
+
+''' Shallow Copy on a Python List
+A shallow copy in Python creates a new object, but instead of copying the elements
+recursively, it copies only the references to the original elements. This means that the new
+object is a separate entity from the original one, but if the elements themselves are
+mutable, changes made to those elements in the new object will affect the original object
+as well
+Example:- '''
+import copy
+# Original list
+original_list = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+# Creating a shallow copy
+shallow_copied_list = copy.copy(original_list)
+# Modifying an element in the shallow copied list
+shallow_copied_list[0][0] = 100
+# Printing both lists
+print("Original List:", original_list)
+print("Shallow Copied List:", shallow_copied_list)
+
+''' Deep Copy on a Python List
+A deep copy in Python creates a completely new object and recursively copies all the
+objects referenced by the original object.
+Example:- '''
+import copy
+# Original list
+original_list = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+# Creating a deep copy
+deep_copied_list = copy.deepcopy(original_list)
+# Modifying an element in the deep copied list
+deep_copied_list[0][0] = 100
+# Printing both lists
+print("Original List:", original_list)
+print("Deep Copied List:", deep_copied_list)
+'''As you can see, when we modify the first element of the first sublist in the deep copied
+list, it does not affect the original list.
+This is because a deep copy creates a new object and recursively copies all the nested
+objects, ensuring that the copied object is fully independent from the original one'''
+
+''' Copying List Using Slice Notation
+Slice notation in Python allows you to create a subsequence of elements from a sequence
+(like a list, tuple, or string) by specifying a start index, an end index, and an optional step
+size.
+Syntax:- [start:end:step]
+Where, start is the index where the slice starts, end is the index where the slice ends
+(exclusive), and step is the step size between elements. (Any modifications made to the copied list will not affect the original list,
+and vice versa, because they are separate objects in memory.)
+Example:- '''
+# Original list
+original_list = [1, 2, 3, 4, 5]
+# Copying the list using slice notation
+copied_list = original_list[1:4]
+# Modifying the copied list
+copied_list[0] = 100
+# Printing both lists
+print("Original List:", original_list)
+print("Copied List:", copied_list)
+
+''' Copying List Using the list() Function '''
+'''ExampleL- 
+# Original list
+original_list = [1, 2, 3, 4, 5]
+# Copying the list using the list() constructor
+copied_list = list(original_list)    
+# Printing both lists
+print("Original List:", original_list)
+print("Copied List:", copied_list)
+'''
+
+'''------------------ Join Lists in Python ---------------------
+Joining lists in Python refers to combining the elements of multiple lists into a single list.
+This can be achieved using various methods, such as concatenation, list comprehension,
+or using built-in functions like extend() or + operator'''
+''' Join Lists Using Concatenation Operator
+Example:-'''
+# Two lists to be joined
+L1 = [10,20,30,40]
+L2 = ['one', 'two', 'three', 'four']
+# Joining the lists
+joined_list = L1 + L2
+# Printing the joined list
+print("Joined List:", joined_list)
+
+''' Join Lists Using List Comprehension
+List comprehension is a concise way to create lists in Python. It is used to generate new
+lists by applying an expression to each item in an existing iterable, such as a list, tuple, or
+range. The syntax for list comprehension is −
+new_list = [expression for item in iterable]
+
+Example:- '''
+# Two lists to be joined
+L1 = [36, 24, 3]
+L2 = [84, 5, 81]
+# Joining the lists using list comprehension
+joined_list = [item for sublist in [L1, L2] for item in sublist]
+# Printing the joined list
+print("Joined List:", joined_list)
+
+''' Join Lists Using append() Function
+The append() function in Python is used to add a single element to the end of a list. This
+function modifies the original list by adding the element to the end of the list.'''
+# List to which elements will be appended
+list1 = ['Fruit', 'Number', 'Animal']
+# List from which elements will be appended
+list2 = ['Apple', 5, 'Dog']
+# Joining the lists using the append() function
+for element in list2:
+    list1.append(element)
+# Printing the joined list
+print("Joined List:", list1)
+
+''' Join Lists Using extend() Function
+The Python extend() function is used to append elements from an iterable (such as another
+list) to the end of the list. This function modifies the original list in place, adding the
+elements of the iterable to the end of the list.
+Example
+In the following example, we are extending "list1" by appending the elements of "list2"
+using the extend() function −'''
+# List to be extended
+list1 = [10, 15, 20]
+# List to be added
+list2 = [25, 30, 35]
+# Joining the lists using the extend() function
+list1.extend(list2)
+# Printing the extended list
+print("Extended List:", list1)
+
+'''------------------------------ List Methods ---------------------------------'''
+'''Printing All the List Methods
+To view all the available methods for lists, you can use the Python dir() function, which
+returns all the properties and functions related to an object. Additionally, you can use the
+Python help() function to get more detailed information about each method. For example:
+'''
+print(dir([]))
+print(help([].append))
+
+''' Methods to Add Elements to a List
+The following are the methods specifically designed for adding new item/items into a list
+−
+#------- List Methods ---------------------------------
+Sr.No.           Methods with Description 
+---------------------------------------------------------
+1                          list.append(obj)  
+                     Appends object obj to list. 
+2                          list.extend(seq) 
+                    Appends the contents of seq to list 
+3                          list.insert(index, obj)  
+                    Insert object obj into list at offset index 
+-------------------------------------------------------------------
+'''
+
+''' Methods to Remove Elements from a List
+The following are the methods specifically designed for removing items from a list −
+#------- List Methods ---------------------------------
+Sr.No.           Methods with Description 
+---------------------------------------------------------
+1                          list.clear()  
+                     Clears all the contents of the list. 
+2                          list.pop(obj=list[-1]) 
+                    Removes and returns the last object or the object at the specified index from the list. 
+3                          list.remove(obj)  
+                    Removes the first occurrence of object obj from the list.
+------------------------------------------------------------------------------
+'''
+
+''' Methods to Access Elements in a List
+These are the methods used for finding or counting items in a list −
+#------- List Methods ---------------------------------
+Sr.No.           Methods with Description 
+---------------------------------------------------------
+1                          list.index(obj)  
+                     Returns the lowest index in list that obj appears 
+2                          list.count(obj) 
+                    Returns count of how many times obj occurs in the list.
+------------------------------------------------------------------------------
+'''
+
+'''Copying and Ordering Methods
+These are the methods used for creating copies and arranging items in a list −
+#------- List Methods ---------------------------------
+Sr.No.           Methods with Description 
+---------------------------------------------------------
+1                          list.copy()  
+                     Returns a copy of the list object. 
+2                          list.sort([func]) 
+                    Sorts the objects in the list in place, using a comparison function if provided. 
+3                          list.reverse()  
+                    Reverses the order of objects in the list in place.
+------------------------------------------------------------------------------
+'''
+
+''' Python List Exercise 1
+Python program to find unique numbers in a given list.'''
+L1 = [1, 9, 1, 6, 3, 4, 5, 1, 1, 2, 5, 6, 7, 8, 9, 2]
+L2 = []
+
+for i in L1:
+    if i not in L2:
+        L2.append(i)
+print(L2)
+
+''' Python List Exercise 2
+Python program to find sum of all numbers in a list.'''
+L1 = [1, 9, 1, 6, 3, 4]
+ttl = 0
+for x in L1:
+    ttl+=x
+print ("Sum of all numbers Using loop:", ttl)
+ttl = sum(L1)
+print ("Sum of all numbers sum() function:", ttl)
+
+'''Python List Exercise 3
+Python program to create a list of 5 random integers'''
+import random
+L1 = []
+for i in range(5):
+    x = random.randint(0, 100)
+    L1.append(x)
+print (L1)
