@@ -30,4 +30,21 @@ Python Expression           Results                         Description
 3 in [1, 2, 3]              TRUE                            Membership
 - end of "TJ2" formating.
 
+- start of "TJ3" formating.
+#--------------------------- [Python Dictionary Operators] ----------------------------
+Operator                Description                     Example
+---------------------------------------------------------------------------------------
+dict[key]           Extract/assign the value mapped     print (d1['b']) retrieves 4
+                        with key                        d1['b'] = 'Z' assigns new
+                                                        value to key 'b'
+                                                  
+dict1|dict2         Union of two dictionary objects,    d3=d1|d2 ; print (d3)
+                    returning new object                {'a': 2, 'b': 4, 'c': 30, 'a1':
+                                                        20, 'b1': 40, 'c1': 60}
+
+dict1|=dict2        Augmented dictionary union          d1|=d2; print (d1)
+                    operator                            {'a': 2, 'b': 4, 'c': 30, 'a1':
+                                                        20, 'b1': 40, 'c1': 60}
+- end of "TJ3" formating.
+
 
