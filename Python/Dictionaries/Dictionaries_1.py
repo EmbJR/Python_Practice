@@ -644,4 +644,466 @@ def default_value():
 d = defaultdict(default_value)
 print(d["c"])
 
-'''------------------------------- Python - Remove Dictionary Items ------------------------'''
+'''------------------------------- Python - Remove Dictionary Items ------------------------
+Remove Dictionary Items Removing dictionary items in Python refers to deleting key-value pairs from an existing
+dictionary.
+We can remove dictionary items in Python using various ways such as −
+     using the del keyword
+     using the pop() method
+     using the popitem() method
+     using the clear() method
+     using dictionary comprehension
+'''
+
+''' Remove Dictionary Items Using del Keyword
+The del keyword in Python is used to delete objects. In the context of dictionaries, it is
+used to remove an item or a slice of items from the dictionary, based on the specified
+key(s).
+Example 1:- 
+In the following example, we are creating a dictionary named numbers with integer keys
+and their corresponding string values. Then, delete the item with the key '20' using the
+del keyword'''
+numbers = {10:"Ten", 20:"Twenty", 30:"Thirty",40:"Forty"}
+print ("numbers dictionary before delete operation: \n", numbers)
+del numbers[20]
+print ("numbers dictionary before delete operation: \n", numbers)
+
+''' The del keyword, when used with a dictionary object, removes the dictionary from memory
+Example:- '''
+numbers = {10:"Ten", 20:"Twenty", 30:"Thirty",40:"Forty"}
+print ("numbers dictionary before delete operation: \n", numbers)
+del numbers
+print ("numbers dictionary before delete operation: \n", numbers)
+
+''' Remove Dictionary Items Using pop() Method
+The pop() method in Python is used to remove a specified key from a dictionary and return
+the corresponding value. If the specified key is not found, it can optionally return a default
+value instead of raising a KeyError.
+
+Example:-
+In this example, we are using the pop() method to remove the item with the key '20'
+(storing its value in val) from the 'numbers' dictionary. We then retrieve the updated
+dictionary and the popped value'''
+
+numbers = {10:"Ten", 20:"Twenty", 30:"Thirty",40:"Forty"}
+print ("numbers dictionary before pop operation: \n", numbers)
+val = numbers.pop(20)
+print ("nubvers dictionary after pop operation: \n", numbers)
+print ("Value popped: ", val)
+
+''' Remove Dictionary Items Using popitem() Method
+The popitem() method in Python is used to remove and return the last key-value pair from
+a dictionary.
+Since Python 3.7, dictionaries maintain the insertion order, so popitem()
+removes the most recently added item. If the dictionary is empty, calling
+popitem() raises a KeyError.
+Example:- '''
+numbers = {10:"Ten", 20:"Twenty", 30:"Thirty",40:"Forty"}
+print ("numbers dictionary before pop operation: \n", numbers)
+val = numbers.popitem()
+print ("numbers dictionary after pop operation: \n", numbers)
+print ("Value popped: ", val)
+
+''' Remove Dictionary Items Using clear() Method
+The clear() method in Python is used to remove all items from a dictionary. It effectively
+empties the dictionary, leaving it with a length of 0.
+
+Example:- '''
+numbers = {10:"Ten", 20:"Twenty", 30:"Thirty",40:"Forty"}
+print ("numbers dictionary before clear method: \n", numbers)
+numbers.clear()
+print ("numbers dictionary after clear method: \n", numbers)
+
+''' Remove Dictionary Items using Dictionary Comprehension
+Dictionary comprehension is a concise way to create dictionaries in Python. It follows the
+same syntax as list comprehension but generates dictionaries instead of lists. With
+dictionary comprehension, you can iterate over iterable objects (such as lists, tuples, or
+other dictionaries), apply an expression to each item, and construct key-value pairs based
+on the result of that expression.
+We cannot directly remove dictionary items using dictionary comprehension.
+Dictionary comprehension is primarily used for creating new dictionaries based
+on some transformation or filtering of existing data, rather than for removing
+items from dictionaries.
+If you need to remove items from a dictionary based on certain conditions, you would
+typically use other methods like del, pop(), or popitem(). These methods allow you to
+explicitly specify which items to remove from the dictionary.
+Example:-
+In this example, we remove items 'age' and 'major' from the 'student_info' dictionary
+based on a predefined list of keys to remove'''
+
+# Creating a dictionary
+student_info = {
+"name": "Alice",
+"age": 21,
+"major": "Computer Science"
+}
+# Removing items based on conditions
+keys_to_remove = ["age", "major"]
+for key in keys_to_remove:
+    student_info.pop(key, None)
+print(student_info)
+
+'''------------------------------------ Python - Dictionary View Objects ------------------------
+The items(), keys(), and values() methods of dict class return view objects. These views
+are refreshed dynamically whenever any change occurs in the contents of their source
+dictionary object.
+The items() Method
+    The items() method returns a dict_items view object. It contains a list of tuples, each tuple
+    made up of respective key, value pairs.
+Syntax:-  Obj = dict.items()
+            Return value
+            The items() method returns dict_items object which is a dynamic view of (key,value)
+            tuples.
+Example:- 
+In the following example, we first obtain the dict_items object with items() method and
+check how it is dynamically updated when the dictionary object is updated'''
+
+numbers = {10:"Ten", 20:"Twenty", 30:"Thirty",40:"Forty"}
+obj = numbers.items()
+print ('type of obj: ', type(obj))
+print (obj)
+print ("update numbers dictionary")
+numbers.update({50:"Fifty"})
+print ("View automatically updated")
+print (obj)
+
+''' The keys() Method
+The keys() method of dict class returns dict_keys object which is a list of all keys defined
+in the dictionary. It is a view object, as it gets automatically updated whenever any update
+action is done on the dictionary object.
+Syntax Obj = dict.keys()
+            Return value
+            The keys() method returns dict_keys object which is a view of keys in the dictionary.
+Example
+In this example, we are creating a dictionary named "numbers" with integer keys and their
+corresponding string values. Then, we obtain a view object "obj" of the keys using the
+keys() method, and retrieve its type and content −'''
+
+numbers = {10:"Ten", 20:"Twenty", 30:"Thirty",40:"Forty"}
+obj = numbers.keys()
+print ('type of obj: ', type(obj))
+print (obj)
+print ("update numbers dictionary")
+numbers.update({50:"Fifty"})
+print ("View automatically updated")
+print (obj)
+
+''' The values() Method
+The values() method returns a view of all the values present in the dictionary. The object
+is of dict_value type, which gets automatically updated.
+Syntax:- Obj = dict.values()
+            Return value
+            The values() method returns dict_values object which is a view of values in the dictionary.
+Example:- 
+In the example below, we obtain a view object "obj" of the values using the values()
+method from the "numbers" dictionary '''
+numbers = {10:"Ten", 20:"Twenty", 30:"Thirty",40:"Forty"}
+obj = numbers.values()
+print ('type of obj: ', type(obj))
+print (obj)
+print ("update numbers dictionary")
+numbers.update({50:"Fifty"})
+print ("View automatically updated")
+print (obj)
+
+'''-------------------------------------- Python - Loop Dictionaries -------------------
+Loop Through Dictionaries
+Looping through dictionaries in Python refers to iterating over key-value pairs within the
+dictionary and performing operations on each pair. This allows you to access both keys
+and their corresponding values. There are several ways/methods for looping through
+dictionaries −
+     Using a for Loop
+     Using dict.items() method
+     Using dict.keys() method
+     Using dict.values() method
+'''
+''' Loop Through Dictionary Using a For Loop
+A for loop in Python is a control flow statement that iterates over a sequence of elements.
+It repeatedly executes a block of code for each item in the sequence. The sequence can
+be a range of numbers, a list, a tuple, a string, or any iterable object.
+1> Iterating over Keys
+    In this approach, the loop iterates over the keys of the dictionary. Inside the loop, you can
+    access the value corresponding to each key using dictionary indexing
+    Example:-
+        student = {"name": "Alice", "age": 21, "major": "Computer Science"}
+        for key in student:
+            print(key, student[key])
+2>  Iterating over Key-Value Pairs
+    In this approach, the loop iterates over the key-value pairs using the items() method of
+    the dictionary. Each iteration provides both the key and its corresponding value
+    Example:- 
+        student = {"name": "Alice", "age": 21, "major": "Computer Science"}
+        for key, value in student.items():
+            print(key, value)'''
+
+''' Loop through Dictionary Using dict.items() Method
+The dict.items() method in Python is used to return a view object that displays a list of
+key-value pairs in the dictionary. 
+Example:-
+'''
+student = {"name": "Alice", "age": 21, "major": "Computer Science"}
+# Looping through key-value pairs
+for key, value in student.items():
+    print(key, value)
+
+''' Loop through Dictionary Using dict.keys() Method
+The dict.keys() method in Python is used to return a view object that displays a list of keys
+in the dictionary. 
+Example:- '''
+student = {"name": "Alice", "age": 21, "major": "Computer Science"}
+# Looping through keys
+for key in student.keys():
+    print(key)
+
+''' Loop through Dictionary Using dict.values() Method
+The dict.values() method in Python is used to return a view object that displays a list of
+values in the dictionary. 
+Example:- '''
+student = {"name": "Alice", "age": 21, "major": "Computer Science"}
+# Looping through values
+for value in student.values():
+    print(value)
+
+'''--------------------------------- Python - Copy Dictionaries -----------------------
+Copying dictionaries in Python refers to creating a new dictionary that contains the same
+key-value pairs as the original dictionary.
+We can copy dictionaries using various ways, depending on the requirements and the
+nature of the dictionary's values (whether they are mutable or immutable, nested or not).
+Shallow Copy
+    When you perform a shallow copy, a new dictionary object is created, but it contains
+    references to the same objects as the original dictionary references.
+    This is useful when you want to duplicate the structure of a dictionary without duplicating
+    the nested objects it contains.
+    This can be done using the copy() method or the dict() function as shown below −
+Example: Using the copy() Method
+In the following example, we can see that changing the "age" in the shallow copy does not
+affect the original.
+However, modifying the list in the shallow copy also affects the original because the list is
+a mutable object and only a reference is copied.'''
+original_dict = {"name": "Alice", "age": 25, "skills": ["Python", "Data Science"]}
+shallow_copy = original_dict.copy()
+# Modifying the shallow copy
+shallow_copy["age"] = 26
+shallow_copy["skills"].append("Machine Learning")
+print("Original dictionary:", original_dict)
+print("Shallow copy:", shallow_copy)
+
+''' Example: Using the dict() Method
+Similar to the copy() method, the dict() method creates a shallow copy as shown in the
+example below-'''
+original_dict = {"name": "Bob", "age": 30, "skills": ["Java", "C++"]}
+shallow_copy = dict(original_dict)
+# Modifying the shallow copy
+shallow_copy["age"] = 31
+shallow_copy["skills"].append("C#")
+print("Original dictionary:", original_dict)
+print("Shallow copy:", shallow_copy)
+
+''' Deep Copy
+A deep copy creates a new dictionary and recursively copies all objects found in the original
+dictionary. This means that not only the dictionary itself but also all objects it contains
+(including nested dictionaries, lists, etc.) are copied. As a result, changes made to the
+deep copy do not affect the original dictionary and vice versa.
+We can achieve this using the deepcopy() function in the copy module.
+Example:-
+We can see in the example below that the "age" value in the deep copy is changed, the
+"skills" list in the deep copy is modified (an item is appended) and the "education"
+dictionary in the deep copy is modified, all without affecting the original'''
+
+import copy
+original_dict = {
+    "name": "Alice",
+    "age": 25,
+    "skills": ["Python", "Data Science"],
+    "education": {
+    "degree": "Bachelor's",
+    "field": "Computer Science"
+}
+}
+# Creating a deep copy
+deep_copy = copy.deepcopy(original_dict)
+# Modifying the deep copy
+deep_copy["age"] = 26
+deep_copy["skills"].append("Machine Learning")
+deep_copy["education"]["degree"] = "Master's"
+# Retrieving both dictionaries
+print("Original dictionary:", original_dict)
+print("Deep copy:", deep_copy)
+
+
+'''------------------------------------------- Python - Nested Dictionaries -------------------------
+Nested dictionaries in Python refer to dictionaries that are stored as values within another
+dictionary. In other words, a dictionary can contain other dictionaries as its values, forming
+a hierarchical or nested structure.
+Nested dictionaries can be modified, updated, or extended in the same way as regular
+dictionaries. You can add, remove, or update key-value pairs at any level of the nested
+structure'''
+
+''' Creating a Nested Dictionary in Python
+We can create a nested dictionary in Python by defining a dictionary where the values of
+certain keys are themselves dictionaries. This allows for the creation of a hierarchical
+structure where each key-value pair represents a level of nested information. This can be
+achieved in several ways −
+
+Example: Direct Assignment
+In this approach, we can directly assign dictionaries as values to outer keys within a single
+dictionary definition'''
+# Define the outer dictionary
+nested_dict = {
+"outer_key1": {"inner_key1": "value1", "inner_key2": "value2"},
+"outer_key2": {"inner_key3": "value3", "inner_key4": "value4"}
+}
+print(nested_dict)
+
+'''Example: Using a Loop
+With this method, an empty outer dictionary is initialized, and then populated with
+dictionaries as values using a loop to define nested dictionaries −'''
+# Define an empty outer dictionary
+nested_dict = {}
+# Add key-value pairs to the outer dictionary
+outer_keys = ["outer_key1", "outer_key2"]
+for key in outer_keys:
+    nested_dict[key] = {"inner_key1": "value1", "inner_key2": "value2"}
+print(nested_dict)
+
+''' Adding Items to a Nested Dictionary in Python
+Once a nested dictionary is created, we can add items to it by accessing the specific nested
+dictionary using its key and then assigning a new key-value pair to it.
+In the following example, we are defining a nested dictionary "students" where each key
+represents a student's name and its value is another dictionary containing details about
+the student.
+Then, we add a new key-value pair to Alice's nested dictionary and add a new nested
+dictionary for a new student, Charlie'''
+# Initial nested dictionary
+students = {
+"Alice": {"age": 21, "major": "Computer Science"},
+"Bob": {"age": 20, "major": "Engineering"}
+}
+# Adding a new key-value pair to Alice's nested dictionary
+students["Alice"]["GPA"] = 3.8
+# Adding a new nested dictionary for a new student
+students["Charlie"] = {"age": 22, "major": "Mathematics"}
+print(students)
+
+''' Accessing Items of a Nested Dictionary in Python
+Accessing items of a nested dictionary in Python refers to retrieving values stored within
+the nested structure by using a series of keys. Each key corresponds to a level in the
+hierarchy of the dictionary.
+We can achieve this through direct indexing with square brackets or by using the get()
+method
+Example: Using Direct Indexing
+In this approach, we access values in a nested dictionary by specifying each key in a
+sequence of square brackets. Each key in the sequence refers to a level in the nested
+dictionary, progressing one level deeper with each key'''
+# Define a nested dictionary
+students = {
+    "Alice": {"age": 21, "major": "Computer Science"},
+    "Bob": {"age": 20, "major": "Engineering"},
+    "Charlie": {"age": 22, "major": "Mathematics"}
+}
+# Access Alice's major
+alice_major = students["Alice"]["major"]
+print("Alice's major:", alice_major)
+# Access Bob's age
+bob_age = students["Bob"]["age"]
+print("Bob's age:", bob_age)
+
+''' Example: Using the get() Method
+The get() method is used to fetch the value associated with the specified key. If the key
+does not exist, it returns a default value (which is None if not specified) −'''
+
+# Define a nested dictionary
+students = {
+    "Alice": {"age": 21, "major": "Computer Science"},
+    "Bob": {"age": 20, "major": "Engineering"},
+    "Charlie": {"age": 22, "major": "Mathematics"}
+}
+# Access Alice's major using .get()
+alice_major = students.get("Alice", {}).get("major", "Not Found")
+print("Alice's major:", alice_major)
+# Safely access a non-existing key using .get()
+dave_major = students.get("Dave", {}).get("major", "Not Found")
+print("Dave's major:", dave_major)
+
+''' Deleting a Dictionary from a Nested Dictionary
+We can delete dictionaries from a nested dictionary by using the del keyword. This keyword
+allows us to remove a specific key-value pair from the nested dictionary.
+Example
+In the following example, we delete the nested dictionary for "Bob" from "students"
+dictionary using the del statemen'''
+# Define a nested dictionary
+students = {
+"Alice": {"age": 21, "major": "Computer Science"},
+"Bob": {"age": 20, "major": "Engineering"},
+"Charlie": {"age": 22, "major": "Mathematics"}
+}
+# Delete the dictionary for Bob
+del students["Bob"]
+# Print the updated nested dictionary
+print(students)
+
+''' Iterating Through a Nested Dictionary in Python
+Iterating through a nested dictionary refers to looping through the keys and values at each
+level of the dictionary. This allows you to access and manipulate items within the nested
+structure.
+Example
+In this example, we are iterating through the "students" dictionary, retrieving each
+student's name and their corresponding details by iterating through the nested dictionaries'''
+
+# Defining a nested dictionary
+students = {
+"Alice": {"age": 21, "major": "Computer Science"},
+"Bob": {"age": 20, "major": "Engineering"},
+"Charlie": {"age": 22, "major": "Mathematics"}
+}
+# Iterating through the Nested Dictionary:
+for student, details in students.items():
+    print(f"Student: {student}")
+    for key, value in details.items():
+        print(f" {key}: {value}")
+
+'''----------------------------------- Python - Dictionary Methods ---------------------------'''        
+'''A Python dictionary is an object of the built-in dict class, which defines the following
+methods
+Dictionary Methods
+Sr.No. Method and Description
+1 dict.clear()
+Removes all elements of dictionary dict.
+2 dict.copy()
+Returns a shallow copy of dictionary dict.
+3
+dict.fromkeys()
+Create a new dictionary with keys from
+seq and values set to value.
+4
+dict.get(key, default=None)
+For key key, returns value or default if
+key not in dictionary.
+5
+dict.has_key(key)
+Returns true if a given key is available in
+the dictionary, otherwise it returns a
+false.
+6
+dict.items()
+Returns a list of dict's (key, value) tuple
+pairs.
+7 dict.keys()
+Returns list of dictionary dict's keys.
+8
+dict.pop()
+Removes the element with specified key
+from the collection
+9 dict.popitem()
+Removes the last inserted key-value pair
+10
+dict.setdefault(key, default=None)
+Similar to get(), but will set
+dict[key]=default if key is not already in
+dict.
+11
+dict.update(dict2)
+Adds dictionary dict2's key-values pairs
+to dict.
+12 dict.values()
+Returns list of dictionary dict's values.'''
