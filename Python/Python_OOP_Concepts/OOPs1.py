@@ -292,7 +292,7 @@ class Employee:
     def displayEmployee(self):
         print "Name : ", self.name, ", Salary: ", self.salary
 ''' 
-    The variable empCount is a class variable whose value is shared among all
+     The variable empCount is a class variable whose value is shared among all
         instances of this class. This can be accessed as Employee.empCount from inside
         the class or outside the class.
      The first method __init__() is a special method, which is called class constructor
@@ -356,3 +356,158 @@ emp1.age = 7
 emp2.age = 8
 # Delete 'age' attribute
 del emp1.age
+
+''' Instead of using the normal statements to access attributes, you can also use the following
+functions −
+     getattr(obj, name[, default]) − to access the attribute of object.
+     hasattr(obj,name) − to check if an attribute exists or not.
+     setattr(obj,name,value) − to set an attribute. If attribute does not exist, then it
+        would be created.
+     delattr(obj, name) − to delete an attribute.'''
+
+# Returns true if 'age' attribute exists
+hasattr(emp1, 'age')
+# Returns value of 'age' attribute
+getattr(emp1, 'age')
+# Set attribute 'age' at 8
+setattr(emp1, 'age', 8)
+# Delete attribute 'age'
+delattr(emp1, 'age')
+
+''' Built-In Class Attributes in Python
+Every Python class keeps following built-in attributes and they can be accessed using dot
+operator like any other attribute
+
+Table 2: Built-In Class Attributes in Python
++------+--------------------------+--------------------------------------+
+| Sr. | Attribute                | Description                          |
+| No. |                          |                                      |
++------+--------------------------+--------------------------------------+
+| 1    | __dict__                 | Dictionary containing the class's    |
+|      |                          | namespace.                           |
++------+--------------------------+--------------------------------------+
+| 2    | __doc__                  | Class documentation string or none,  |
+|      |                          | if undefined.                        |
++------+--------------------------+--------------------------------------+
+| 3    | __name__                 | Class name                           |
++------+--------------------------+--------------------------------------+
+| 4    | __module__               | Module name in which the class is    |
+|      |                          | defined. This attribute is           |
+|      |                          | "__main__" in interactive mode.      |
++------+--------------------------+--------------------------------------+
+| 5    | __bases__                | A possibly empty tuple containing    |
+|      |                          | the base classes, in the order of    |
+|      |                          | their occurrence in the base class   |
+|      |                          | list.                                |
++------+--------------------------+--------------------------------------+
+'''
+
+''' 
+Example
+For the above Employee class, let us try to access its attributes'''
+class Employee:
+    'Common base class for all employees'
+    empCount = 0
+    def __init__(self, name, salary):
+        self.name = name
+        self.salary = salary
+        Employee.empCount += 1
+    def displayCount(self):
+        print ("Total Employee %d" % Employee.empCount)
+    def displayEmployee(self):
+        print ("Name : ", self.name, ", Salary: ", self.salary)
+print ("Employee.__doc__:", Employee.__doc__)
+print ("Employee.__name__:", Employee.__name__)
+print ("Employee.__module__:", Employee.__module__)
+print ("Employee.__bases__:", Employee.__bases__)
+print ("Employee.__dict__:", Employee.__dict__)
+
+''' Built-in Class of Python datatypes
+As mentioned earlier, Python follows object-oriented programming paradigm. Entities like
+strings, lists and data types belongs to one or another built-in class.
+If we want to see which data type belongs to which built-in class, we can use the Python
+type() function. This function accepts a data type and returns its corresponding class.
+Example
+The below example demonstrates how to check built-in class of a given data type.'''
+num = 20
+print (type(num))
+num1 = 55.50
+print (type(num1))
+s = "TutorialsPoint"
+print (type(s))
+dct = {'a':1,'b':2,'c':3}
+print (type(dct))
+def SayHello():
+    print ("Hello World")
+    return
+print (type(SayHello))
+
+''' Garbage Collection(Destroying Objects) in Python
+Python deletes unwanted objects (built-in types or class instances) automatically to free
+the memory space. The process by which Python periodically reclaims blocks of memory
+that no longer are in use is termed Garbage Collection.
+
+Python's garbage collector runs during program execution and is triggered when an
+object's reference count reaches zero. An object's reference count changes as the number
+of aliases that point to it changes.
+
+An object's reference count increases when it is assigned a new name or placed in a
+container (list, tuple, or dictionary). The object's reference count decreases when it's
+deleted with del, its reference is reassigned, or its reference goes out of scope. When an
+object's reference count reaches zero, Python collects it automatically.'''
+# Create object <40>
+a = 40
+# Increase ref. count of <40>
+b = a
+# Increase ref. count of <40>
+c = [b]
+# Decrease ref. count of <40>
+del a
+# Decrease ref. count of <40>
+b = 100
+# Decrease ref. count of <40>
+c[0] = -1
+
+'''You normally will not notice when the garbage collector destroys an unused instance and
+reclaims its space. But a class can implement the special method __del__(), called a
+destructor, that is invoked when the instance is about to be destroyed. This method might
+be used to clean up any non-memory resources used by an instance.
+Example
+The __del__() destructor prints the class name of an instance that is about to be destroyed
+as shown in the below code block'''
+
+class Point:
+    def __init__( self, x=0, y=0):
+        self.x = x
+        self.y = y
+    def __del__(self):
+        class_name = self.__class__.__name__
+        print (class_name, "destroyed")
+
+pt1 = Point()
+pt2 = pt1
+pt3 = pt1
+# prints the ids of the obejcts
+print (id(pt1), id(pt2), id(pt3))
+del pt1
+del pt2
+del pt3
+
+''' Data Hiding in Python
+An object's attributes may or may not be visible outside the class definition. You need to
+name attributes with a double underscore prefix, and those attributes then are not be
+directly visible to outsiders.'''
+
+class JustCounter:
+    __secretCount = 0
+    def count(self):
+        self.__secretCount += 1
+        print(self.__secretCount)
+counter = JustCounter()
+counter.count()
+counter.count()
+print(counter.__secretCount)
+''' Python protects those members by internally changing the name to include the class name.
+You can access such attributes as object._className__attrName. If you would replace
+your last line, then it works for you'''
+print(counter._JustCounter__secretCount)
