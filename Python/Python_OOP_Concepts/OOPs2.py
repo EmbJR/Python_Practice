@@ -1171,3 +1171,283 @@ previously we have covered the example of duck typing
 In duck typing, the focus is on the object's behavior rather than its explicit type,
 allowing different types of objects to be used interchangeably as long as they exhibit the
 required behavior.'''
+
+'''------------------------------ Python - Dynamic Typing -------------------------------
+One of the standout features of Python language is that it is a dynamically typed language.
+The compiler-based languages C/C++, Java, etc. are statically typed. Let us try to
+understand the difference between static typing and dynamic typing.
+
+In a statically typed language, each variable and its data type must be declared before
+assigning it a value. Any other type of value is not acceptable to the compiler, and it raises
+a compile-time error.
+
+Let us take the following snippet of a Java program
+public class MyClass {
+    public static void main(String args[]) {
+        int var;
+        var="Hello";
+        System.out.println("Value of var = " + var);
+    }
+}
+Here, var is declared as an integer variable. When we try to assign it a string value, the
+compiler gives the following error message −
+
+/MyClass.java:4: error: incompatible types: String cannot be converted to int
+x="Hello";
+^
+1 error
+'''
+
+''' Why Python is Called Dynamically Typed?
+A variable in Python is only a label, or reference to the object stored in the memory, and
+not a named memory location. Hence, the prior declaration of type is not needed. Because
+it's just a label, it can be put on another object, which may be of any type.
+
+In Java, the type of the variable decides what it can store and what not. In Python, it is
+the other way around. Here, the type of data (i.e. object) decides the type of the variable.
+To begin with, let us store a string in the variable in check its type
+Example:- 
+----------------------
+>>> var="Hello"
+>>> print ("id of var is ", id(var))
+id of var is 2822590451184
+>>> print ("type of var is ", type(var))
+type of var is <class 'str'>
+---------------------
+So, var is of string type. However, it is not permanently bound. It's just a label; and can
+be assigned to any other type of object, say a float, which will be stored with a different
+id()
+Example:- 
+--------------------
+>>> var=25.50
+>>> print ("id of var is ", id(var))
+id of var is 2822589562256
+>>> print ("type of var is ", type(var))
+type of var is <class 'float'>
+---------------------
+or a tuple. The var label now sits on a different object.
+>> var=(10,20,30)
+We can see that the type of var changes every time it refers to a new object. That's why
+Python is a dynamically typed language.
+
+Dynamic typing feature of Python makes it flexible compared to C/C++ and Java.
+However, it is prone to runtime errors, so the programmer has to be careful.
+'''
+
+'''------------------------------------ Python - Abstraction -------------------------
+Abstraction is one of the important principles of object-oriented programming. It refers to
+a programming approach by which only the relevant data about an object is exposed,
+hiding all the other details. This approach helps in reducing the complexity and increasing
+the efficiency of application development.'''
+
+''' Types of Python Abstraction
+There are two types of abstraction. One is data abstraction, wherein the original data
+entity is hidden via a data structure that can internally work through the hidden data
+entities. Another type is called process abstraction. It refers to hiding the underlying
+implementation details of a process.
+'''
+
+'''Python Abstract Class
+In object-oriented programming terminology, a class is said to be an abstract class if it
+cannot be instantiated, that is you can have an object of an abstract class. You can
+however use it as a base or parent class for constructing other classes.
+'''
+
+'''Create an Abstract Class
+To create an abstract class in Python, it must inherit the ABC class that is defined in the
+ABC module. This module is available in Python's standard library. Moreover, the class
+must have at least one abstract method. Again, an abstract method is the one which
+cannot be called but can be overridden. You need to decorate it with @abstractmethod
+decorator.
+Example: Create an Abstract Class
+'''
+from abc import ABC, abstractmethod
+class demo(ABC):
+    @abstractmethod
+    def method1(self):
+        print ("abstract method")
+        return
+    def method2(self):
+        print ("concrete method")
+
+''' The demo class inherits ABC class. There is a method1() which is an abstract method.
+Note that the class may have other non-abstract (concrete) methods.
+If you try to declare an object of demo class (obj = demo()), Python raises TypeErro'''
+
+''' The demo class here may be used as parent for another class. However, the child class
+must override the abstract method in parent class. If not, Python throws this error −
+TypeError: Can't instantiate abstract class concreteclass with abstract method
+method1
+
+Abstract Method Overriding
+Hence, the child class with the abstract method overridden is given in the following
+example'''
+from abc import ABC, abstractmethod
+class democlass(ABC):
+    @abstractmethod
+    def method1(self):
+        print ("abstract method")
+        return
+    def method2(self):
+        print ("concrete method")
+class concreteclass(democlass):
+    def method1(self):
+        super().method1()
+        return
+obj = concreteclass()
+obj.method1()
+obj.method2()
+
+'''----------------------------------------- Python - Encapsulation ----------------------------
+Encapsulation is the process of bundling attributes and methods within a single unit
+
+According to the principle of data encapsulation, the data members that describe an object
+are hidden from the environment external to the class. They can only be accessed through
+the methods within the same class. Methods themselves on the other hand are accessible
+from outside class context. Hence, object data is said to be encapsulated by the methods.
+In this way, encapsulation prevents direct access to the object data.'''
+
+''' Implementing Encapsulation in Python
+Languages such as C++ and Java use access modifiers to restrict access to class members
+(i.e., variables and methods). These languages have keywords public, protected, and
+private to specify the type of access.
+
+Unlike these languages, Python has no provision to specify the type of access that a class
+member may have. By default, all the variables and methods in a Python class are public,
+as demonstrated by the following example.
+
+Example 1
+Here, we have an Employee class with instance variables, name and age. An object of this
+class has these two attributes. They can be directly accessed from outside the class,
+because they are public.'''
+
+class Student:
+    def __init__(self, name="Rajaram", marks=50):
+        self.name = name
+        self.marks = marks
+
+s1 = Student()
+s2 = Student("Bharat", 25)
+print ("Name: {} marks: {}".format(s1.name, s2.marks))
+print ("Name: {} marks: {}".format(s2.name, s2.marks))
+
+''' In Python, prefixing name of a variable/method
+with a single or double underscore to emulate the behavior of protected and private access
+modifiers.
+If a variable is prefixed by a double underscore (such as "__age"), the instance variable
+is private. Similarly if a variable name is prefixed with a single underscore (such as
+"_salary"), it becomes a private variable.
+
+Example 2
+Let us modify the Student class. Add another instance variable salary. Make name private
+and marks as private by prefixing double underscores to them'''
+class Student:
+    def __init__(self, name="Rajaram", marks=50):
+        self.__name = name
+        self.__marks = marks
+def studentdata(self):
+    print ("Name: {} marks: {}".format(self.__name, self.__marks))
+s1 = Student()
+s2 = Student("Bharat", 25)
+s1.studentdata()
+s2.studentdata()
+print ("Name: {} marks: {}".format(s1.__name, s2.__marks))
+print ("Name: {} marks: {}".format(s2.__name, s2.__marks))
+
+''' What is Name Mangling?
+Python doesn't block access to private data entirely. It just leaves it to the wisdom of the
+programmer, not to write any code that accesses it from outside the class. You can still
+access the private members by Python's name mangling technique.
+
+In our example above , the private instance variable "__name" is mangled by changing it to the
+format:- 
+    obj._class__privatevar
+which is 
+    "print (s1._Student__marks)"
+'''
+
+'''------------------------------------------ Python - Interfaces -------------------------
+In software engineering, an interface is a software architectural pattern. It is similar to a
+class but its methods just have prototype signature definition without any executable code
+or implementation body. The required functionality must be implemented by the methods
+of any class that inherits the interface.
+The method defined without any executable code is known as abstract method'''
+
+''' Interfaces in Python
+In languages like Java and Go, there is keyword called interface which is used to define
+an interface. Python doesn't have it or any similar keyword. It uses abstract base classes
+(in short ABC module) and @abstractmethod decorator to create interfaces.
+
+NOTE: In Python, abstract classes are also created using ABC module.
+
+An abstract class and interface appear similar in Python. The only difference in two is that
+the abstract class may have some non-abstract methods, while all methods in interface
+must be abstract, and the implementing class must override all the abstract methods.'''
+
+''' Rules for implementing Python Interfaces
+We need to consider the following points while creating and implementing interfaces in
+Python −
+     Methods defined inside an interface must be abstract.
+     Creating object of an interface is not allowed.
+     A class implementing an interface needs to define all the methods of that interface.
+     In case, a class is not implementing all the methods defined inside the interface,
+        the class must be declared abstract. '''
+
+''' Ways to implement Interfaces in Python
+We can create and implement interfaces in two ways −
+     Formal Interface
+     Informal Interface
+'''
+
+''' Formal Interface
+Formal interfaces in Python are implemented using abstract base class (ABC). To use this
+class, you need to import it from the abc module.
+
+Example
+In this example, we are creating a formal interface with two abstract methods'''
+
+from abc import ABC, abstractmethod
+# creating interface
+class demoInterface(ABC):
+    @abstractmethod
+    def method1(self):
+        print ("Abstract method1")
+        return
+    @abstractmethod
+    def method2(self):
+        print ("Abstract method1")
+        return
+''' Let us provide a class that implements both the abstract methods'''    
+# class implementing the above interface
+class concreteclass(demoInterface):
+    def method1(self):
+        print ("This is method1")
+        return
+    def method2(self):
+        print ("This is method2")
+        return
+# creating instance
+obj = concreteclass()
+# method call
+obj.method1()
+obj.method2()
+
+''' Informal Interface
+In Python, the informal interface refers to a class with methods that can be overridden.
+However, the compiler cannot strictly enforce the implementation of all the provided
+methods. This type of interface works on the principle of duck typing. It allows us to call any method
+on an object without checking its type, as long as the method exists.
+
+Example
+In the below example, we are demonstrating the concept of informal interface'''
+
+class demoInterface:
+    def displayMsg(self):
+        pass
+class newClass(demoInterface):
+    def displayMsg(self):
+        print ("This is my message")
+# creating instance
+obj = newClass()
+# method call
+obj.displayMsg()
