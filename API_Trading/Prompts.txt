@@ -1,0 +1,3 @@
+- Please make me the app in python which can list all current positions with the P&L with trending amounts. Also please write the code in python and simply understandable manner. Also write the code for Groow API based trading platform. Write the code on "Groww/AI_Codes/Kilo_Code/Test2.py" file.
+
+- Please add the loop in the code "Groww/AI_Codes/Kilo_Code/Test2.py" which constantly gets updated every 2 seconds and also it looks veisually good.
