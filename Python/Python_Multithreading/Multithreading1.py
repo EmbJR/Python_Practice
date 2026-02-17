@@ -247,3 +247,199 @@ exitFlag = 1
 for t in threads:
     t.join()
 print ("Exiting Main Thread")
+
+'''----------------------------- Python - Thread Lifecycle ---------------------------
+A thread object goes through different stages during its life cycle. When a new thread
+object is created, it must be started, which calls the run() method of thread class. This
+method contains the logic of the process to be performed by the new thread. The thread
+completes its task as the run() method is over, and the newly created thread merges with
+the main thread.
+
+While a thread is running, it may be paused either for a predefined duration or it may be
+asked to pause till a certain event occurs. The thread resumes after the specified interval
+or the process is over
+'''
+
+''' States of a Thread Life Cycle in Python
+Following are the stages of the Python Thread life cycle −
+     Creating a Thread − To create a new thread in Python, you typically use the Thread
+        class from the threading module.
+     Starting a Thread − Once a thread object is created, it must be started by calling
+        its start() method. This initiates the thread's activity and invokes its run() method
+        in a separate thread.
+     Paused/Blocked State − Threads can be paused or blocked for various reasons,
+        such as waiting for I/O operations to complete or another thread to perform a task.
+        This is typically managed by calling its join() method. This blocks the calling thread
+        until the thread being joined terminates.
+     Synchronizing Threads − Synchronization ensures orderly execution and shared
+        resource management among threads. This can be done by using synchronization
+        primitives like locks, semaphores, or condition variables.
+     Termination − A thread terminates when its run() method completes execution,
+        either by finishing its task or encountering an exception.
+
+Example: Python Thread Life Cycle Demonstration
+This example demonstrates the thread life cycle in Python by showing thread creation,
+starting, execution, and synchronization with the main thread.'''
+
+import threading
+def func(x):
+    print('Current Thread Details:', threading.current_thread())
+    for n in range(x):
+        print('{} Running'.format(threading.current_thread().name), n)
+    print('Internal Thread Finished...')
+# Create thread objects
+t1 = threading.Thread(target=func, args=(2,))
+t2 = threading.Thread(target=func, args=(3,))
+# Start the threads
+print('Thread State: CREATED')
+t1.start()
+t2.start()
+# Wait for threads to complete
+t1.join()
+t2.join()
+print('Threads State: FINISHED')
+# Simulate main thread work
+for i in range(3):
+    print('Main Thread Running', i)
+print("Main Thread Finished...")
+
+''' Example: Using a Synchronization Primitive
+Here is another example demonstrates the thread life cycle in Python, including creation,
+starting, running, and termination states, along with synchronization using a semaphore.'''
+import threading
+import time
+# Create a semaphore
+semaphore = threading.Semaphore(2)
+def worker():
+    with semaphore:
+        print('{} has started working'.format(threading.current_thread().name))
+        time.sleep(2)
+        print('{} has finished working'.format(threading.current_thread().name))
+# Create a list to keep track of thread objects
+threads = []
+# Create and start 5 threads
+for i in range(5):
+    t = threading.Thread(target=worker, name='Thread-{}'.format(i+1))
+    threads.append(t)
+    print('{} has been created'.format(t.name))
+    t.start()
+# Wait for all threads to complete
+for t in threads:
+    t.join()
+    print('{} has terminated'.format(t.name))
+print('Threads State: All are FINISHED')
+print("Main Thread Finished...")
+
+
+'''------------------------- Python - Creating a Thread ---------------------
+Creating a thread in Python involves initiating a separate flow of execution within a
+program, allowing multiple operations to run concurrently. This is particularly useful for
+performing tasks simultaneously, such as handling various I/O operations in parallel.
+Python provides multiple ways to create and manage threads.
+     Creating a thread using the threading module is generally recommended due to its
+        higher-level interface and additional functionalities.
+     On the other hand, the _thread module offers a simpler, lower-level approach to
+        create and manage threads, which can be useful for straightforward, low-overhead
+        threading tasks.
+In this tutorial, you will learn the basics of creating threads in Python using different
+approaches. We will cover creating threads using functions, extending the Thread class
+from the threading module, and utilizing the _thread module.'''
+
+''' Creating Threads with Functions
+You can create threads by using the Thread class from the threading module. In this
+approach, you can create a thread by simply passing a function to the Thread object. Here
+are the steps to start a new thread −
+     Define a function that you want the thread to execute.
+     Create a Thread object using the Thread class, passing the target function and its
+        arguments.
+     Call the start method on the Thread object to begin execution.
+     Optionally, call the join method to wait for the thread to complete before
+        proceeding.
+
+Example
+The following example demonstrates concurrent execution using threads in Python. It
+creates and starts multiple threads that execute different tasks concurrently by specifying
+user-defined functions as targets within the Thread class.'''
+
+from threading import Thread
+def addition_of_numbers(x, y):
+    result = x + y
+    print('Addition of {} + {} = {}'.format(x, y, result))
+def cube_number(i):
+    result = i ** 3
+    print('Cube of {} = {}'.format(i, result))
+def basic_function():
+    print("Basic function is running concurrently...")
+
+Thread(target=addition_of_numbers, args=(2, 4)).start()
+Thread(target=cube_number, args=(4,)).start()
+Thread(target=basic_function).start()
+
+''' Creating Threads by Extending the Thread Class
+Another approach to creating a thread is by extending the Thread class. This approach
+involves defining a new class that inherits from Thread and overriding its __init__ and run
+methods. Here are the steps to start a new thread −
+     Define a new subclass of the Thread class.
+     Override the __init__ method to add additional arguments.
+     Override the run method to implement the thread's behavior.
+Example
+This example demonstrates how to create and manage multiple threads using a custom
+MyThread class that extends the threading.Thread class in Python'''
+import threading
+import time
+exitFlag = 0
+class myThread (threading.Thread):
+    def __init__(self, threadID, name, counter):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.counter = counter
+    def run(self):
+        print ("Starting " + self.name)
+        print_time(self.name, 5, self.counter)
+        print ("Exiting " + self.name)
+def print_time(threadName, counter, delay):
+    while counter:
+        if exitFlag:
+            threadName.exit()
+        time.sleep(delay)
+        print ("%s: %s" % (threadName, time.ctime(time.time())))
+        counter -= 1
+
+# Create new threads
+thread1 = myThread(1, "Thread-1", 1)
+thread2 = myThread(2, "Thread-2", 2)
+# Start new Threads
+thread1.start()
+thread2.start()
+print ("Exiting Main Thread")
+
+''' Creating Threads using start_new_thread() Function
+The start_new_thread() function included in the _thread module is used to create a new
+thread in the running program. This module offers a low-level approach to threading. It is
+simpler but does not have some of the advanced features provided by the threading module.
+
+Here is the syntax of the _thread.start_new_thread() Function
+
+syntax:- _thread.start_new_thread ( function, args[, kwargs] )
+
+This function starts a new thread and returns its identifier. The function parameter
+specifies the function that the new thread will execute. Any arguments required by this
+function can be passed using args and kwargs.
+Example'''
+import _thread
+import time
+# Define a function for the thread
+def thread_task( threadName, delay):
+    for count in range(1, 6):
+        time.sleep(delay)
+        print ("Thread name: {} Count: {}".format ( threadName, count ))
+# Create two threads as follows
+try:
+    _thread.start_new_thread( thread_task, ("Thread-1", 2, ) )
+    _thread.start_new_thread( thread_task, ("Thread-2", 4, ) )
+except:
+    print ("Error: unable to start thread")
+while True:
+    pass
+thread_task("test", 0.3)
