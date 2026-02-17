@@ -219,6 +219,14 @@ def calculate_position_pnl(position_df, symbol):
 STOP_LOSS_PERCENT = -0.5  # -0.5% stop loss
 TRAILING_STOP_LOSS_PERCENT = -0.5  # Trailing stop loss percentage
 
+# Dictionary to store the trailing stop-loss for each symbol
+# This ensures the trailing stop-loss is always incremental (never goes below the previous value)
+trailing_stop_loss_dict = {}
+
+# Dictionary to track if trailing stop-loss is "active" for a symbol
+# Once active, the -0.5% stop-loss is ignored for that symbol
+trailing_sl_active_dict = {}
+
 def close_position(symbol, quantity, exchange="NSE"):
     """
     Close a position by selling the stock.
@@ -267,8 +275,11 @@ def check_and_execute_trading_logic(pnl_data, current_price, symbol, exchange):
     Check P&L conditions and execute trading logic.
     
     Logic:
-    1. If P&L < -0.5%, close the position immediately
-    2. If P&L increases (price goes up), update trailing stop-loss
+    1. If trailing stop-loss is NOT active and P&L < -0.5%, close the position immediately
+    2. If trailing stop-loss is active, ignore the -0.5% stop-loss (only use trailing SL)
+    3. If P&L increases (price goes up), update trailing stop-loss
+       - Only update if final P&L at trailing SL price would be positive
+       - Trailing stop-loss is always incremental (never goes below previous value)
        - Close position when price drops below trailing stop-loss
     
     Parameters:
@@ -282,6 +293,11 @@ def check_and_execute_trading_logic(pnl_data, current_price, symbol, exchange):
     """
     try:
         if pnl_data['net_qty'] <= 0:
+            # Clear trailing stop-loss if position no longer exists
+            if symbol in trailing_stop_loss_dict:
+                del trailing_stop_loss_dict[symbol]
+            if symbol in trailing_sl_active_dict:
+                del trailing_sl_active_dict[symbol]
             return False
         
         avg_buy_price = pnl_data['cost_price']
@@ -294,27 +310,114 @@ def check_and_execute_trading_logic(pnl_data, current_price, symbol, exchange):
         
         # Calculate stop-loss prices
         initial_stop_loss = avg_buy_price * (1 + STOP_LOSS_PERCENT / 100)
-        trailing_stop_loss = current_price * (1 + TRAILING_STOP_LOSS_PERCENT / 100)
         
-        print(Colors.BLUE + f"  [CHECK] {symbol}: Initial SL: Rs.{initial_stop_loss:.2f}, Trailing SL: Rs.{trailing_stop_loss:.2f}" + Colors.ENDC)
+        # Check if trailing stop-loss is already active for this symbol
+        is_trailing_sl_active = trailing_sl_active_dict.get(symbol, False)
         
+        print(Colors.BLUE + f"  [CHECK] {symbol}: Initial SL: Rs.{initial_stop_loss:.2f}, Trailing SL Active: {is_trailing_sl_active}" + Colors.ENDC)
+        
+        # Feature 3: If trailing stop-loss is already active, ignore -0.5% stop-loss
+        # Only check trailing stop-loss
+        if is_trailing_sl_active:
+            # Get current stored trailing stop-loss
+            current_stored_sl = trailing_stop_loss_dict.get(symbol)
+            
+            if current_stored_sl is not None:
+                # Check if current price has dropped below the trailing stop-loss
+                if current_price < current_stored_sl:
+                    print(Colors.RED + f"  [TRAILING STOP-LOSS TRIGGERED] {symbol}: Price (Rs.{current_price:.2f}) < Trailing SL (Rs.{current_stored_sl:.2f}) - Closing position!" + Colors.ENDC)
+                    # Clear the trailing stop-loss for this symbol since position is closed
+                    del trailing_stop_loss_dict[symbol]
+                    del trailing_sl_active_dict[symbol]
+                    return close_position(symbol, net_qty, exchange)
+                else:
+                    # Price is still above trailing SL, no action needed
+                    print(Colors.GREEN + f"  [TRAILING ACTIVE] {symbol}: Price (Rs.{current_price:.2f}) > Trailing SL (Rs.{current_stored_sl:.2f}) - Holding position" + Colors.ENDC)
+            
+            # Feature 1: Update trailing stop-loss if price goes higher
+            # Only if P&L is positive and final P&L at new trailing SL would be positive
+            if pnl_percent > 0:
+                new_trailing_sl = current_price * (1 + TRAILING_STOP_LOSS_PERCENT / 100)
+                
+                # Feature 2: Check if final P&L at new trailing SL price would be positive
+                pnl_at_new_sl_percent = ((new_trailing_sl / avg_buy_price) - 1) * 100 if avg_buy_price > 0 else 0
+                
+                if pnl_at_new_sl_percent > 0:
+                    # Feature 1: Ensure trailing stop-loss is always incremental
+                    if current_stored_sl is not None:
+                        if new_trailing_sl > current_stored_sl:
+                            # Only update if the new SL is higher than the previous one
+                            trailing_stop_loss_dict[symbol] = new_trailing_sl
+                            print(Colors.GREEN + f"  [TRAILING STOP-LOSS UPDATED] {symbol}: P&L positive ({pnl_percent:.2f}%) & Final P&L at new SL positive ({pnl_at_new_sl_percent:.2f}%) - Updated SL: Rs.{new_trailing_sl:.2f} (Previous: Rs.{current_stored_sl:.2f})" + Colors.ENDC)
+                        else:
+                            # Keep the previous trailing stop-loss (it cannot go down)
+                            print(Colors.YELLOW + f"  [TRAILING STOP-LOSS MAINTAINED] {symbol}: New SL (Rs.{new_trailing_sl:.2f}) < Previous SL (Rs.{current_stored_sl:.2f}) - Keeping higher value" + Colors.ENDC)
+                    else:
+                        # First time setting trailing stop-loss for this symbol
+                        trailing_stop_loss_dict[symbol] = new_trailing_sl
+                        print(Colors.GREEN + f"  [TRAILING STOP-LOSS SET] {symbol}: Initial SL: Rs.{new_trailing_sl:.2f}" + Colors.ENDC)
+                else:
+                    print(Colors.YELLOW + f"  [TRAILING STOP-LOSS NOT UPDATED] {symbol}: Final P&L at new SL would be negative ({pnl_at_new_sl_percent:.2f}%) - Keeping previous SL" + Colors.ENDC)
+            
+            return False
+        
+        # Trailing stop-loss is NOT active yet - check -0.5% stop-loss first
         # Condition 1: If P&L < -0.5%, close position immediately
         if pnl_percent < STOP_LOSS_PERCENT:
             print(Colors.RED + f"  [STOP-LOSS TRIGGERED] {symbol}: P&L ({pnl_percent:.2f}%) < {STOP_LOSS_PERCENT}% - Closing position!" + Colors.ENDC)
+            # Clear the trailing stop-loss for this symbol since position is closed
+            if symbol in trailing_stop_loss_dict:
+                del trailing_stop_loss_dict[symbol]
+            if symbol in trailing_sl_active_dict:
+                del trailing_sl_active_dict[symbol]
             return close_position(symbol, net_qty, exchange)
         
-        # Condition 2: If P&L increases (price goes up), check trailing stop-loss
-        # Update trailing stop-loss and close if price drops below it
+        # Condition 2: If P&L increases (price goes up), activate and update trailing stop-loss
+        # Only activate trailing SL when P&L becomes positive
         if pnl_percent > 0:
             # New trailing stop-loss based on current price
             new_trailing_sl = current_price * (1 + TRAILING_STOP_LOSS_PERCENT / 100)
             
-            print(Colors.GREEN + f"  [TRAILING STOP-LOSS] {symbol}: P&L is positive ({pnl_percent:.2f}%) - New SL: Rs.{new_trailing_sl:.2f}" + Colors.ENDC)
+            # Feature 2: Check if final P&L at trailing SL price would be positive
+            pnl_at_trailing_sl_percent = ((new_trailing_sl / avg_buy_price) - 1) * 100 if avg_buy_price > 0 else 0
             
-            # Check if current price has dropped below the trailing stop-loss
-            if current_price < new_trailing_sl:
-                print(Colors.RED + f"  [TRAILING STOP-LOSS TRIGGERED] {symbol}: Price (Rs.{current_price:.2f}) < Trailing SL (Rs.{new_trailing_sl:.2f}) - Closing position!" + Colors.ENDC)
-                return close_position(symbol, net_qty, exchange)
+            # Only activate trailing stop-loss if final P&L at that price would be positive
+            if pnl_at_trailing_sl_percent > 0:
+                # Get the current stored trailing stop-loss for this symbol (if exists)
+                current_stored_sl = trailing_stop_loss_dict.get(symbol)
+                
+                # Feature 1: If we already have a trailing stop-loss set, ensure it doesn't go below the previous value
+                # The trailing stop-loss should always be incremental (can go up, but never down)
+                if current_stored_sl is not None:
+                    if new_trailing_sl > current_stored_sl:
+                        # Only update if the new SL is higher than the previous one
+                        trailing_stop_loss_dict[symbol] = new_trailing_sl
+                        # Mark trailing SL as active
+                        trailing_sl_active_dict[symbol] = True
+                        print(Colors.GREEN + f"  [TRAILING STOP-LOSS ACTIVATED] {symbol}: P&L positive ({pnl_percent:.2f}%) & Final P&L at SL positive ({pnl_at_trailing_sl_percent:.2f}%) - Updated SL: Rs.{new_trailing_sl:.2f} (Previous: Rs.{current_stored_sl:.2f})" + Colors.ENDC)
+                    else:
+                        # Keep the previous trailing stop-loss (it cannot go down)
+                        # Mark trailing SL as active
+                        trailing_sl_active_dict[symbol] = True
+                        print(Colors.YELLOW + f"  [TRAILING STOP-LOSS ACTIVATED] {symbol}: P&L positive ({pnl_percent:.2f}%) - SL maintained at Rs.{current_stored_sl:.2f} (new would be Rs.{new_trailing_sl:.2f})" + Colors.ENDC)
+                else:
+                    # First time setting trailing stop-loss for this symbol
+                    trailing_stop_loss_dict[symbol] = new_trailing_sl
+                    # Mark trailing SL as active
+                    trailing_sl_active_dict[symbol] = True
+                    print(Colors.GREEN + f"  [TRAILING STOP-LOSS ACTIVATED] {symbol}: P&L positive ({pnl_percent:.2f}%) & Final P&L at SL positive ({pnl_at_trailing_sl_percent:.2f}%) - Initial SL: Rs.{new_trailing_sl:.2f}" + Colors.ENDC)
+                
+                # Check if current price has dropped below the trailing stop-loss
+                effective_sl = current_stored_sl if current_stored_sl is not None else new_trailing_sl
+                if current_price < effective_sl:
+                    print(Colors.RED + f"  [TRAILING STOP-LOSS TRIGGERED] {symbol}: Price (Rs.{current_price:.2f}) < Trailing SL (Rs.{effective_sl:.2f}) - Closing position!" + Colors.ENDC)
+                    # Clear the trailing stop-loss for this symbol since position is closed
+                    del trailing_stop_loss_dict[symbol]
+                    del trailing_sl_active_dict[symbol]
+                    return close_position(symbol, net_qty, exchange)
+            else:
+                # Final P&L at trailing SL would be negative, don't activate trailing SL yet
+                print(Colors.YELLOW + f"  [TRAILING STOP-LOSS NOT ACTIVATED] {symbol}: P&L positive ({pnl_percent:.2f}%) but Final P&L at SL would be negative ({pnl_at_trailing_sl_percent:.2f}%)" + Colors.ENDC)
         
         return False
         
@@ -396,6 +499,12 @@ def close_all_positions(position_df, unique_symbols):
                 print(Colors.YELLOW + f"  Closing position for {symbol}: {pnl_data['net_qty']} shares..." + Colors.ENDC)
                 
                 success = close_position(symbol, pnl_data['net_qty'], exchange)
+                
+                # Clear the trailing stop-loss for this symbol since position is closed
+                if symbol in trailing_stop_loss_dict:
+                    del trailing_stop_loss_dict[symbol]
+                if symbol in trailing_sl_active_dict:
+                    del trailing_sl_active_dict[symbol]
                 
                 if success:
                     closed_list.append(symbol)

@@ -6,3 +6,16 @@
 	1> If the P&L for current stock goes less then -0.5% then closs the position.
 	2> If the P&L increases, then increase the stop-loss ammount by that margin.(Ex. Suppose stock bought at price Rs.500 and Stop-Loss price sets to -0.5% which is Rs.497.5, now if stock price growws by Rs.600 then increase the stop-loss ammount by Rs.597(-0.5% from the current price). And closs the position immediately.
  
+- Please modify the code in "Groww/AI_Codes/Kilo_Code/Position_P&L_List_1.py file for the below changes.
+	1> View the P&L with the calculations including all of the charges in india.
+	2> Automaticaly close all of the orders if the current time is 15:15 or more.
+  You can find the charges for india in the document "Groww/Documentation/Brokerage Calculator_Groww.pdf" document.
+  
+- I want you to modify the code in "Groww/AI_Codes/Kilo_Code/Position_P&L_List_1.py" to add the below feature.
+	1> The trailing stop-loss once set, the next trailing stop-loss should not be less then the current stop-loss. In the other context, make the trailing stop-loss always be in the incremental form. 
+	For example if the trailing-stop loss price sets to Rs.41.25 then it should not be go below it. Of course it can go more then that but not less then the last trailing stop-loss.
+	2> The above condition only exists whenever the final P&L after stop-loss will be more then 0% or positive side.
+	3> Once the trailing stop-loss becomes active, the only trailing stop-loss will remains active for that stock and neglecting the stop-loss of -0.5%.
+	
+- When I run the code in "Groww/AI_Codes/Kilo_Code/Position_P&L_List_1.py" I got the following error. Please resolve it.
+	Error:- "[ERROR] Failed to close position for AZAD: GrowwAPI.place_order() missing 1 required positional argument: 'segment'"
