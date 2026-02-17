@@ -1,3 +1,8 @@
 - Please make me the app in python which can list all current positions with the P&L with trending amounts. Also please write the code in python and simply understandable manner. Also write the code for Groow API based trading platform. Write the code on "Groww/AI_Codes/Kilo_Code/Test2.py" file.
 
 - Please add the loop in the code "Groww/AI_Codes/Kilo_Code/Test2.py" which constantly gets updated every 2 seconds and also it looks veisually good.
+
+- Please add the below logic in "Groww/AI_Codes/Kilo_Code/Test2.py" code.
+	1> If the P&L for current stock goes less then -0.5% then closs the position.
+	2> If the P&L increases, then increase the stop-loss ammount by that margin.(Ex. Suppose stock bought at price Rs.500 and Stop-Loss price sets to -0.5% which is Rs.497.5, now if stock price growws by Rs.600 then increase the stop-loss ammount by Rs.597(-0.5% from the current price). And closs the position immediately.
+ 
