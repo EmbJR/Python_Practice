@@ -427,6 +427,7 @@ This function starts a new thread and returns its identifier. The function param
 specifies the function that the new thread will execute. Any arguments required by this
 function can be passed using args and kwargs.
 Example'''
+
 import _thread
 import time
 # Define a function for the thread
@@ -440,6 +441,244 @@ try:
     _thread.start_new_thread( thread_task, ("Thread-2", 4, ) )
 except:
     print ("Error: unable to start thread")
-while True:
+
+var = 10
+
+while var:
+    ''' If we put the empty while loop, the threads will continously run.'''
+    var-=1
+    time.sleep(1)
     pass
+
 thread_task("test", 0.3)
+
+'''------------------------------------ Python - Starting a Thread ---------------------------
+In Python, starting a thread involves using the start() method provided by the Thread
+class in the threading module. This method initiates the thread's activity and automatically
+calls its run() method in a separate thread of execution. Meaning that, when you call
+start() on each thread object (for example., thread1, thread2, thread3) to initiate their
+execution,
+Python launches separate threads that concurrently execute the run() method defined in
+each Thread instance. The main thread continues its execution after starting the child
+threads.
+In this tutorial, you will see a detailed explanation and example of how to use the start()
+method effectively in multi-threaded programming to understand its behavior in multi-
+thread applications.'''
+
+''' Starting a Thread in Python
+The start() method is fundamental for beginning the execution of a thread. It sets up the
+thread's environment and schedules it to run. Importantly, it should only be called once
+per Thread object. If this method is called more than once on the same Thread object, it
+will raise a RuntimeError.
+
+Here is the syntax for using the start() method on a Thread object −
+        threading.thread.start()
+
+Example:-
+Let's see the below example, that demonstrates how to start a new thread in Python using
+the start() method'''
+
+from threading import Thread
+from time import sleep
+def my_function(arg):
+    for i in range(arg):
+        print("child Thread running", i)
+        sleep(0.5)
+thread = Thread(target = my_function, args = (10, ))
+thread.start()
+print("thread finished...exiting")
+
+''' Example
+Here is another example demonstrating the working of the start() method. You can
+observe that, by not calling the start() method on thread2, it remains inactive and does
+not begin execution.'''
+
+import threading
+import time
+class MyThread(threading.Thread):
+    def __init__(self, threadID, name, counter):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.counter = counter
+    def run(self):
+        print("Starting " + self.name)
+        print_time(self.name, self.counter)
+        print("Exiting " + self.name)
+def print_time(threadName, counter):
+    while counter:
+        time.sleep(1)
+        print("%s: %s" % (threadName, time.ctime(time.time())))
+        counter -= 1
+# Create new threads
+thread1 = MyThread(1, "Thread-1", 1)
+thread2 = MyThread(2, "Thread-2", 2)
+
+thread3 = MyThread(3, "Thread-3", 3)
+# Start new Threads
+thread1.start()
+thread3.start()
+print("Exiting Main Thread")
+
+'''------------------------------------ Python - Joining the Threads ------------------------
+In Python, joining the threads means using the join() method to wait for one thread to
+finish before moving on to others. This is useful in multithreaded programming to make
+sure some threads are completed before starting or continuing with other threads. By
+using the join() method, you can make sure that one thread has finished running before
+another thread or the main program continues. In this tutorial you will get the detailed
+explain of the join() method with suitable examples.'''
+
+''' Joining the Threads in Python
+To join the threads in Python, you can use the Thread.join() method from the threading
+module. Which generally is used to block the calling thread until the thread on which join()
+was called terminates. The termination may be either normal, because of an unhandled
+exception − or until the optional timeout occurs. You can call join() multiple times.
+However, if you try to join the current thread or attempts to join a thread before starting
+it with the start() method, will raise the RuntimeError exception.
+
+Following is the syntax of the Thread.join() method −
+    thread.join(timeout)
+
+Where, the timeout is an optional parameter that takes a floating-point number specifying
+the maximum wait time in seconds (or fractions thereof). If it is not provided or None, the
+method will block until the thread terminates.
+
+This method always returns None. After calling join(), you can use is_alive() to check if
+the thread is still running. This is useful to determine if the join() call timed out.
+
+Example
+The following example demonstrates the use of join() in a multithreaded program. It starts
+two threads (thread1 and thread2). Initially, it blocks the main thread until thread1
+finishes executing the my_function_1. After thread1 completes, thread2.start() is called,
+followed by thread2.join() to ensure that the main thread waits until thread2 finishes
+executing my_function_2().'''
+from threading import Thread
+from time import sleep
+def my_function_1(arg):
+    for i in range(arg):
+        print("Child Thread 1 running", i)
+        sleep(0.5)
+def my_function_2(arg):
+    for i in range(arg):
+        print("Child Thread 2 running", i)
+        sleep(0.1)
+# Create thread objects
+thread1 = Thread(target=my_function_1, args=(5,))
+thread2 = Thread(target=my_function_2, args=(3,))
+# Start the first thread and wait for it to complete
+thread1.start()
+thread1.join()
+# Start the second thread and wait for it to complete
+thread2.start()
+thread2.join()
+print("Main thread finished...exiting")
+
+''' Example
+Here is another example that demonstrates how the join() method with a timeout allows
+waiting for a thread to complete for a specified period, then proceeding even if the thread
+hasn't finished'''
+
+from threading import Thread
+from time import sleep
+def my_function_1(arg):
+    for i in range(arg):
+        print("Child Thread 1 running", i)
+        sleep(0.5)
+def my_function_2(arg):
+    for i in range(arg):
+        print("Child Thread 2 running", i)
+        sleep(0.1)
+# Create thread objects
+thread1 = Thread(target=my_function_1, args=(5,))
+thread2 = Thread(target=my_function_2, args=(3,))
+# Start the first thread and wait for 0.2 seconds
+thread1.start()
+thread1.join(timeout=0.2)
+# Start the second thread and wait for it to complete
+thread2.start()
+thread2.join()
+print("Main thread finished...exiting")
+
+'''---------------------------- Python - Naming the Threads -----------------------------
+In Python, naming a thread involves assigning a string as an identifier to the thread object.
+Thread names in Python are primarily used for identification purposes only and do not
+affect the thread's behavior or semantics. Multiple threads can share the same name, and
+names can be specified during the thread's initialization or changed dynamically.'''
+
+''' Naming the Threads in Python
+When you create a thread using threading.Thread() class, you can specify its name using
+the name parameter. 
+
+If not provided, Python assigns a default name like the following
+pattern "Thread-N", where N is a small decimal number. Alternatively, if you specify a
+target function, the default name format becomes "Thread-N (target_function_name)".
+
+Example
+Here is an example demonstrates assigning custom and default names to threads created
+using threading.Thread() class, and displays how names can reflect target functions.'''
+
+from threading import Thread
+import threading
+from time import sleep
+def my_function_1(arg):
+    print("This tread name is", threading.current_thread().name)
+# Create thread objects
+thread1 = Thread(target=my_function_1, name='My_thread', args=(2,))
+thread2 = Thread(target=my_function_1, args=(3,))
+print("This tread name is", threading.current_thread().name)
+# Start the first thread and wait for 0.2 seconds
+thread1.start()
+thread1.join()
+# Start the second thread and wait for it to complete
+thread2.start()
+thread2.join()
+
+''' Dynamically Assigning Names to the Python Threads
+You can assign or change a thread's name dynamically by directly modifying the name
+attribute of the thread object.
+Example:- '''
+
+from threading import Thread
+import threading
+from time import sleep
+def my_function_1(arg):
+    threading.current_thread().name = "custom_name"
+    print("This tread name is", threading.current_thread().name)
+# Create thread objects
+thread1 = Thread(target=my_function_1, name='My_thread', args=(2,))
+thread2 = Thread(target=my_function_1, args=(3,))
+print("This tread name is", threading.current_thread().name)
+# Start the first thread and wait for 0.2 seconds
+thread1.start()
+thread1.join()
+# Start the second thread and wait for it to complete
+thread2.start()
+thread2.join()
+
+''' Example
+Threads can be initialized with custom names and even renamed after creation. This
+example demonstrates creating threads with custom names and modifying a thread's
+name after creation.'''
+
+import threading
+def addition_of_numbers(x, y):
+    print("This Thread name is :", threading.current_thread().name)
+    result = x + y
+def cube_number(i):
+    result = i ** 3
+    print("This Thread name is :", threading.current_thread().name)
+def basic_function():
+    print("This Thread name is :", threading.current_thread().name)
+# Create threads with custom names
+t1 = threading.Thread(target=addition_of_numbers, name='My_thread', args=(2, 4))
+t2 = threading.Thread(target=cube_number, args=(4,))
+t3 = threading.Thread(target=basic_function)
+# Start and join threads
+t1.start()
+t1.join()
+t2.start()
+t2.join()
+t3.name = 'custom_name' # Assigning name after thread creation
+t3.start()
+t3.join()
+print(threading.current_thread().name) # Print main thread's name
