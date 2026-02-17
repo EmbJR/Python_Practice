@@ -88,8 +88,9 @@ def get_current_price(symbol, exchange="NSE"):
             segment=groww.SEGMENT_CASH
         )
         
-        # Extract price from response
-        current_price = float(ltp_response[ltp_symbol])
+        # Extract price from response and convert to native Python types
+        # This ensures we don't pass numpy.float64 to JSON which causes serialization errors
+        current_price = float(float(ltp_response[ltp_symbol]))
         
         # Rate limiting - wait 1 second between API calls
         time.sleep(1)
@@ -189,11 +190,11 @@ def calculate_position_pnl(position_df, symbol):
     sell_charges = calculate_charges(total_sell_qty, total_sell_value / total_sell_qty if total_sell_qty > 0 else 0, False, exchange)
     
     # Net position
-    net_qty = total_buy_qty - total_sell_qty
+    net_qty = int(total_buy_qty - total_sell_qty)
     
     # Average prices
-    avg_buy_price = total_buy_value / total_buy_qty if total_buy_qty > 0 else 0
-    avg_sell_price = total_sell_value / total_sell_qty if total_sell_qty > 0 else 0
+    avg_buy_price = float(total_buy_value / total_buy_qty if total_buy_qty > 0 else 0)
+    avg_sell_price = float(total_sell_value / total_sell_qty if total_sell_qty > 0 else 0)
     
     # Cost and current value
     cost_price = avg_buy_price if net_qty > 0 else avg_sell_price
@@ -208,10 +209,10 @@ def calculate_position_pnl(position_df, symbol):
         'avg_buy_price': avg_buy_price,
         'avg_sell_price': avg_sell_price,
         'cost_price': cost_price,
-        'total_cost': cost_price * abs(net_qty),
+        'total_cost': float(cost_price * abs(net_qty)),
         'exchange': exchange,
-        'total_buy_charges': total_buy_charges,
-        'total_sell_charges': total_sell_charges
+        'total_buy_charges': float(total_buy_charges),
+        'total_sell_charges': float(total_sell_charges)
     }
 
 
@@ -243,6 +244,10 @@ def close_position(symbol, quantity, exchange="NSE"):
         # Format: NSE_RELIANCE or BSE_RELIANCE
         trading_symbol = f"{exchange}_{symbol}"
         
+        # Convert quantity to Python int (to avoid JSON serialization error with numpy int64)
+        # First convert from numpy int64 or any other numeric type to native Python int
+        quantity = int(float(quantity))
+        
         # Get current price for order
         current_price = get_current_price(symbol, exchange)
         
@@ -252,6 +257,7 @@ def close_position(symbol, quantity, exchange="NSE"):
         
         # Place sell order (MIS for intraday)
         order_response = groww.place_order(
+            segment=groww.SEGMENT_CASH,
             trading_symbol=trading_symbol,
             exchange=groww.EXCHANGE_NSE if exchange == "NSE" else groww.EXCHANGE_BSE,
             transaction_type=groww.TRANSACTION_TYPE_SELL,
