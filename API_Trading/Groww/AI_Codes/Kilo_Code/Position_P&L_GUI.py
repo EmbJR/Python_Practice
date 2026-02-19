@@ -55,6 +55,8 @@ BSE_EXCHANGE_CHARGE = 0.0000135
 def get_current_price(symbol, exchange="NSE"):
     """Get the Last Traded Price (LTP) for a given symbol."""
     try:
+        # Groww API returns trading_symbol without exchange prefix (e.g., "AUROPHARMA")
+        # but requires exchange prefix for LTP queries (e.g., "NSE_AUROPHARMA")
         ltp_symbol = f"{exchange}_{symbol}"
         ltp_response = groww.get_ltp(
             exchange_trading_symbols=ltp_symbol,
@@ -141,9 +143,13 @@ def calculate_charges(quantity, price, is_buy, exchange="NSE"):
 def calculate_position_pnl(position_df, symbol):
     """Calculate P&L for a specific position."""
     symbol_data = position_df[position_df['trading_symbol'] == symbol].copy()
-    exchange = "NSE"
-    if 'exchange' in symbol_data.columns:
-        exchange = symbol_data['exchange'].iloc[0] if not symbol_data.empty else "NSE"
+    
+    # Get unique exchanges for this symbol
+    exchanges = symbol_data['exchange'].unique() if 'exchange' in symbol_data.columns else ['NSE']
+    
+    # If symbol has positions on multiple exchanges, we need to handle each separately
+    # For simplicity, use the first exchange (or NSE if multiple)
+    exchange = exchanges[0] if len(exchanges) > 0 else 'NSE'
     
     total_buy_qty = symbol_data['credit_quantity'].fillna(0).sum()
     total_buy_value = (symbol_data['credit_price'].fillna(0) * symbol_data['credit_quantity'].fillna(0)).sum()
@@ -151,13 +157,25 @@ def calculate_position_pnl(position_df, symbol):
     total_sell_value = (symbol_data['debit_price'].fillna(0) * symbol_data['debit_quantity'].fillna(0)).sum()
     
     net_qty = int(total_buy_qty - total_sell_qty)
-    avg_buy_price = float(total_buy_value / total_buy_qty if total_buy_qty > 0 else 0)
-    cost_price = avg_buy_price if net_qty > 0 else 0
+    
+    # For long positions (net_qty > 0): use average buy price as cost price
+    # For short positions (net_qty < 0): use average sell price as cost price
+    avg_buy_price = 0
+    avg_sell_price = 0
+    
+    if net_qty > 0:
+        avg_buy_price = float(total_buy_value / total_buy_qty if total_buy_qty > 0 else 0)
+        cost_price = avg_buy_price
+    elif net_qty < 0:
+        avg_sell_price = float(total_sell_value / total_sell_qty if total_sell_qty > 0 else 0)
+        cost_price = avg_sell_price
+    else:
+        cost_price = 0
     
     return {
         'symbol': symbol,
         'net_qty': net_qty,
-        'avg_buy_price': avg_buy_price,
+        'avg_buy_price': avg_buy_price if net_qty > 0 else (avg_sell_price if net_qty < 0 else 0),
         'cost_price': cost_price,
         'total_cost': float(cost_price * abs(net_qty)),
         'exchange': exchange
@@ -169,6 +187,10 @@ def get_exchange_from_position(position_df, symbol):
     try:
         symbol_data = position_df[position_df['trading_symbol'] == symbol]
         if not symbol_data.empty:
+            # Check the exchange column directly from position data
+            if 'exchange' in symbol_data.columns:
+                return symbol_data['exchange'].iloc[0]
+            # Fallback: legacy check for BSE_ prefix (deprecated)
             ts = symbol_data['trading_symbol'].iloc[0]
             if 'BSE_' in ts:
                 return "BSE"
@@ -179,46 +201,48 @@ def get_exchange_from_position(position_df, symbol):
 
 
 def close_position(symbol, quantity, exchange="NSE"):
-    """Close a position by selling the stock."""
+    """Close a position by selling (for long) or buying (for short) the stock."""
     try:
-        # Check if symbol already has exchange prefix
-        if 'NSE_' in symbol or 'BSE_' in symbol:
-            trading_symbol = symbol
-            # Extract clean symbol if prefix exists
-            if 'NSE_' in symbol:
-                symbol = symbol.replace('NSE_', '')
-                exchange = 'NSE'
-            elif 'BSE_' in symbol:
-                symbol = symbol.replace('BSE_', '')
-                exchange = 'BSE'
-        else:
-            trading_symbol = f"{exchange}_{symbol}"
+        # Groww API returns trading_symbol without exchange prefix (e.g., "AUROPHARMA")
+        # For order placement, use trading_symbol WITHOUT exchange prefix
+        trading_symbol = symbol  # Already without prefix from API
         
-        quantity = int(float(quantity))
+        # Check if this is a short position (negative quantity)
+        is_short = quantity < 0
+        
+        print(f"  [INFO] Closing position: symbol={symbol}, trading_symbol={trading_symbol}, exchange={exchange}, qty={quantity}")
+        
+        # Use absolute value of quantity (for short positions, quantity is negative)
+        quantity = int(abs(float(quantity)))
         
         current_price = get_current_price(symbol, exchange)
         
         if current_price is None:
-            print(f"  [ERROR] Could not get current price for {symbol}")
+            print(f"  [ERROR] Could not get current price for {symbol} on {exchange}")
             return False
+        
+        # For long positions: SELL to close
+        # For short positions: BUY to close
+        transaction_type = groww.TRANSACTION_TYPE_BUY if is_short else groww.TRANSACTION_TYPE_SELL
+        action_text = "Bought" if is_short else "Sold"
         
         order_response = groww.place_order(
             segment=groww.SEGMENT_CASH,
             trading_symbol=trading_symbol,
             exchange=groww.EXCHANGE_NSE if exchange == "NSE" else groww.EXCHANGE_BSE,
-            transaction_type=groww.TRANSACTION_TYPE_SELL,
+            transaction_type=transaction_type,
             quantity=quantity,
             product=groww.PRODUCT_MIS,
             order_type=groww.ORDER_TYPE_MARKET,
             validity=groww.VALIDITY_DAY
         )
         
-        print(f"  [SUCCESS] Position closed for {symbol}: Sold {quantity} shares at ~Rs.{current_price}")
+        print(f"  [SUCCESS] Position closed for {symbol}: {action_text} {quantity} shares at ~Rs.{current_price}")
         time.sleep(0.5)  # Reduced delay
         return True
         
     except Exception as e:
-        print(f"  [ERROR] Failed to close position for {symbol}: {e}")
+        print(f"  [ERROR] Failed to close position for {symbol} (exchange={exchange}): {e}")
         return False
 
 
@@ -491,13 +515,16 @@ class PositionGUI:
                     total_charges = buy_charges['total_charges'] + sell_charges['total_charges']
                     
                     if net_qty > 0:
+                        # Long position: profit when current price > cost price
                         gross_pnl = (current_price - cost_price) * net_qty
                         pnl = gross_pnl - total_charges
                         pnl_percent = ((current_price / cost_price) - 1) * 100 if cost_price > 0 else 0
                     else:
-                        gross_pnl = 0
-                        pnl = 0
-                        pnl_percent = 0
+                        # Short position: profit when current price < cost price (sell price)
+                        # For short: Buy back at lower price = profit, Buy back at higher price = loss
+                        gross_pnl = (cost_price - current_price) * abs(net_qty)
+                        pnl = gross_pnl - total_charges
+                        pnl_percent = ((cost_price / current_price) - 1) * 100 if current_price > 0 else 0
                     
                     position_info = {
                         'symbol': symbol,

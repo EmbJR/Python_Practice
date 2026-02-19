@@ -36,3 +36,17 @@
 	
 - I found that groww.get_ltp() is taking longer time due to which overall performance of system gets impacted in code "Holdings_GUI.py".
 I want you to add the mechanizem where this api (groww.get_ltp()) called parallaly to reduce the time taken by repeatadly calling this api one by on.
+
+- I want you to make the parallalalizem as possible to make the system faster in the code "Groww/AI_Codes/Kilo_Code/Position_P&L_GUI.py" like done in "Holdings_GUI.py". Also cut down the delay as possible.
+
+- Please resolve the error given below when I want to exit from the position in "Position_P&L_GUI.py" code.
+"[ERROR] Failed to close position for AUROPHARMA: Invalid trading symbol."
+
+- The code in "Position_P&L_GUI.py" is made for intraday. Gere I found that for intraday buy order, the P&L shows correct but for intraday sell first it is not showing correctly.
+For example:- If I buy 10 stock in intraday for Rs 5, and current price is Rs 6, then it shows the "Gross P&L" Rs10.0 vithout texs, But When I sell 5 stock at Rs 5, and current price is Rs 4 then it is showing "Gross P&L" as 0.00 which is due to "Avg price" shows Rs 0.00.
+
+So. Please correct it. 
+
+- Please fix the error below in code "Position_P&L_GUI.py"
+"[INFO] Closing position: symbol=AUROPHARMA, trading_symbol=AUROPHARMA, exchange=NSE, qty=-2
+  [ERROR] Failed to close position for AUROPHARMA (exchange=NSE): must be greater than or equal to 1"
