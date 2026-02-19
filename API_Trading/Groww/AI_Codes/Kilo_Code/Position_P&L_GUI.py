@@ -13,6 +13,7 @@ import pandas as pd
 import time
 from datetime import datetime
 import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Import growwapi directly
 from growwapi import GrowwAPI
@@ -36,7 +37,7 @@ class GUIColors:
 
 
 # Configuration - Same as original file
-API_AUTH_TOKEN = "eyJraWQiOiJaTUtjVXciLCJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3NzEzNzQ2MDAsImlhdCI6MTc3MTMwOTk5MiwibmJmIjoxNzcxMzA5OTkyLCJzdWIiOiJ7XCJ0b2tlblJlZklkXCI6XCJlZjRlMjUzNS0zOWJiLTQzOGItYjE1MC0wMDEzN2RiNGU2ODhcIixcInZlbmRvckludGVncmF0aW9uS2V5XCI6XCJlMzFmZjIzYjA4NmI0MDZjODg3NGIyZjZkODQ5NTMxM1wiLFwidXNlckFjY291bnRJZFwiOlwiYzVkZjhiMGUtZTg5Ni00MmIyLWEzYjUtNzg5MmNiMDllMGY0XCIsXCJkZXZpY2VJZFwiOlwiZDFjZmEzZjgtMzFmYS01ZjcwLWJjN2MtMjUxMDA0ZTU1MGQxXCIsXCJzZXNzaW9uSWRcIjpcIjlmODlmZTJkLTRhZGYtNGU3Zi1hOGY5LTM1MjUzZTEyN2E5NVwiLFwiYWRkaXRpb25hbERhdGFcIjpcIno1NC9NZzltdjE2WXdmb0gvS0EwYksxMnV6S0FTTkdXV3VYZGtEdy9jSEZSTkczdTlLa2pWZDNoWjU1ZStNZERhWXBOVi9UOUxIRmtQejFFQisybTdRPT1cIixcInJvbGVcIjpcIm9yZGVyLWJhc2ljLGxpdmVfZGF0YS1iYXNpYyxub25fdHJhZGluZy1iYXNpYyxvcmRlcl9yZWFkX29ubHktYmFzaWNcIixcInNvdXJjZUlwQWRkcmVzc1wiOlwiMjQwNToyMDE6MjAxZjoyODVkOmZkZGY6MWNmMDo5ZDg3OjQ2NDksMTYyLjE1OC4xOTEuMjE0LDM1LjI0MS4yMy4xMjNcIixcInR3b0ZhRXhwaXJ5VHNcIjoxNzcxMzc0NjAwMDAwfSIsImlzcyI6ImFwZXgtYXV0aC1wcm9kLWFwcCJ9.gZu9npYxGj7vs9Eb2T5afJurVH75y1fq6vuB6NAyK1eB5Xo7zLIZnGGmLQTTNz7_GAamdLLTNAODSchg5PKJWg"
+API_AUTH_TOKEN = "eyJraWQiOiJaTUtjVXciLCJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3NzE1NDc0MDAsImlhdCI6MTc3MTQ4MDU0OSwibmJmIjoxNzcxNDgwNTQ5LCJzdWIiOiJ7XCJ0b2tlblJlZklkXCI6XCI0YjZkODRhNi0zYmE2LTQ1ODAtODFlYS03MGM5ZjY2YmVkYmJcIixcInZlbmRvckludGVncmF0aW9uS2V5XCI6XCJlMzFmZjIzYjA4NmI0MDZjODg3NGIyZjZkODQ5NTMxM1wiLFwidXNlckFjY291bnRJZFwiOlwiYzVkZjhiMGUtZTg5Ni00MmIyLWEzYjUtNzg5MmNiMDllMGY0XCIsXCJkZXZpY2VJZFwiOlwiZDFjZmEzZjgtMzFmYS01ZjcwLWJjN2MtMjUxMDA0ZTU1MGQxXCIsXCJzZXNzaW9uSWRcIjpcIjIxMjY3MTU4LTgyODAtNDY2ZS1iZWZlLTRmZWE3NzA5MDU3NFwiLFwiYWRkaXRpb25hbERhdGFcIjpcIno1NC9NZzltdjE2WXdmb0gvS0EwYksxMnV6S0FTTkdXV3VYZGtEdy9jSEZSTkczdTlLa2pWZDNoWjU1ZStNZERhWXBOVi9UOUxIRmtQejFFQisybTdRPT1cIixcInJvbGVcIjpcIm9yZGVyLWJhc2ljLGxpdmVfZGF0YS1iYXNpYyxub25fdHJhZGluZy1iYXNpYyxvcmRlcl9yZWFkX29ubHktYmFzaWNcIixcInNvdXJjZUlwQWRkcmVzc1wiOlwiMjQwNToyMDE6MjAxZjoyODVkOjcxOTQ6ZTZjNTo4ZDMxOmVjMGMsMTYyLjE1OC4xOTEuMTg5LDM1LjI0MS4yMy4xMjNcIixcInR3b0ZhRXhwaXJ5VHNcIjoxNzcxNTQ3NDAwMDAwfSIsImlzcyI6ImFwZXgtYXV0aC1wcm9kLWFwcCJ9.mSTdqvAXI8tRWwglKdY-RHYA8oZpDw00S41hpNuHtgbUhPuFh1l1G1uX4i8GqKe4svCHL9CeXJU5I5aDCIHuKQ"
 
 # Initialize Groww API
 groww = GrowwAPI(API_AUTH_TOKEN)
@@ -60,11 +61,53 @@ def get_current_price(symbol, exchange="NSE"):
             segment=groww.SEGMENT_CASH
         )
         current_price = float(float(ltp_response[ltp_symbol]))
-        time.sleep(1)
         return current_price
     except Exception as e:
         print(f"Error getting LTP for {symbol}: {e}")
         return None
+
+
+def _fetch_single_ltp(args):
+    """Helper function to fetch LTP for a single symbol (used for parallel execution)."""
+    symbol, exchange = args
+    return symbol, exchange, get_current_price(symbol, exchange)
+
+
+def get_current_prices_parallel(symbols_exchanges_list):
+    """
+    Get LTP for multiple symbols in parallel using ThreadPoolExecutor.
+    
+    Args:
+        symbols_exchanges_list: List of tuples [(symbol, exchange), ...]
+    
+    Returns:
+        Dictionary mapping symbol to current price
+    """
+    if not symbols_exchanges_list:
+        return {}
+    
+    prices = {}
+    
+    # Use ThreadPoolExecutor to fetch LTP in parallel
+    # Adjust max_workers based on API rate limits
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        # Submit all tasks
+        future_to_symbol = {
+            executor.submit(_fetch_single_ltp, (symbol, exchange)): (symbol, exchange)
+            for symbol, exchange in symbols_exchanges_list
+        }
+        
+        # Collect results as they complete
+        for future in as_completed(future_to_symbol):
+            try:
+                symbol, exchange, price = future.result()
+                prices[symbol] = price
+            except Exception as e:
+                symbol, exchange = future_to_symbol[future]
+                print(f"Error fetching LTP for {symbol}: {e}")
+                prices[symbol] = None
+    
+    return prices
 
 
 def calculate_charges(quantity, price, is_buy, exchange="NSE"):
@@ -138,7 +181,19 @@ def get_exchange_from_position(position_df, symbol):
 def close_position(symbol, quantity, exchange="NSE"):
     """Close a position by selling the stock."""
     try:
-        trading_symbol = f"{exchange}_{symbol}"
+        # Check if symbol already has exchange prefix
+        if 'NSE_' in symbol or 'BSE_' in symbol:
+            trading_symbol = symbol
+            # Extract clean symbol if prefix exists
+            if 'NSE_' in symbol:
+                symbol = symbol.replace('NSE_', '')
+                exchange = 'NSE'
+            elif 'BSE_' in symbol:
+                symbol = symbol.replace('BSE_', '')
+                exchange = 'BSE'
+        else:
+            trading_symbol = f"{exchange}_{symbol}"
+        
         quantity = int(float(quantity))
         
         current_price = get_current_price(symbol, exchange)
@@ -159,7 +214,7 @@ def close_position(symbol, quantity, exchange="NSE"):
         )
         
         print(f"  [SUCCESS] Position closed for {symbol}: Sold {quantity} shares at ~Rs.{current_price}")
-        time.sleep(1)
+        time.sleep(0.5)  # Reduced delay
         return True
         
     except Exception as e:
@@ -179,6 +234,7 @@ class PositionGUI:
         self.positions_data = []
         self.refresh_interval = 5000  # 5 seconds refresh
         self.is_running = True
+        self.is_refreshing = False  # Flag to prevent concurrent refreshes
         
         # Create GUI components
         self.create_header()
@@ -361,12 +417,13 @@ class PositionGUI:
         self.count_label.pack(side=tk.RIGHT, padx=20)
     
     def trigger_refresh(self):
-        """Trigger a manual refresh"""
-        self.refresh_thread = threading.Thread(target=self.refresh_positions_thread, daemon=True)
-        self.refresh_thread.start()
+        """Trigger a manual refresh if not already refreshing"""
+        if not self.is_refreshing:
+            threading.Thread(target=self.refresh_positions_thread, daemon=True).start()
     
     def refresh_positions_thread(self):
-        """Fetch positions in a separate thread"""
+        """Fetch positions in a separate thread using parallel LTP fetching"""
+        self.is_refreshing = True
         try:
             self.root.after(0, self.clear_table)
             
@@ -380,6 +437,10 @@ class PositionGUI:
             unique_symbols = position_df['trading_symbol'].unique().tolist()
             results = []
             
+            # First pass: collect all symbols and their exchanges
+            symbols_exchanges_list = []
+            positions_with_info = []
+            
             for symbol in unique_symbols:
                 try:
                     pnl_data = calculate_position_pnl(position_df, symbol)
@@ -388,22 +449,51 @@ class PositionGUI:
                         continue
                     
                     exchange = pnl_data.get('exchange', get_exchange_from_position(position_df, symbol))
-                    current_price = get_current_price(symbol, exchange)
                     
+                    # Collect symbol and exchange for parallel LTP fetch
+                    symbols_exchanges_list.append((symbol, exchange))
+                    
+                    # Store other info for later use
+                    positions_with_info.append({
+                        'symbol': symbol,
+                        'exchange': exchange,
+                        'net_qty': pnl_data['net_qty'],
+                        'cost_price': pnl_data['cost_price'],
+                        'total_cost': pnl_data['total_cost']
+                    })
+                    
+                except Exception as e:
+                    print(f"Error processing {symbol}: {e}")
+                    continue
+            
+            # Fetch all LTPs in parallel
+            print(f"Fetching LTP for {len(symbols_exchanges_list)} symbols in parallel...")
+            ltp_prices = get_current_prices_parallel(symbols_exchanges_list)
+            
+            # Second pass: calculate P&L using fetched prices
+            for pos_info in positions_with_info:
+                try:
+                    symbol = pos_info['symbol']
+                    exchange = pos_info['exchange']
+                    net_qty = pos_info['net_qty']
+                    cost_price = pos_info['cost_price']
+                    total_cost = pos_info['total_cost']
+                    
+                    current_price = ltp_prices.get(symbol)
                     if current_price is None:
-                        current_price = pnl_data['cost_price']
+                        current_price = cost_price
                     
-                    current_value = current_price * abs(pnl_data['net_qty'])
-                    invested_value = pnl_data['cost_price'] * abs(pnl_data['net_qty'])
+                    current_value = current_price * abs(net_qty)
+                    invested_value = cost_price * abs(net_qty)
                     
-                    buy_charges = calculate_charges(abs(pnl_data['net_qty']), pnl_data['cost_price'], True, exchange)
-                    sell_charges = calculate_charges(abs(pnl_data['net_qty']), current_price, False, exchange)
+                    buy_charges = calculate_charges(abs(net_qty), cost_price, True, exchange)
+                    sell_charges = calculate_charges(abs(net_qty), current_price, False, exchange)
                     total_charges = buy_charges['total_charges'] + sell_charges['total_charges']
                     
-                    if pnl_data['net_qty'] > 0:
-                        gross_pnl = (current_price - pnl_data['cost_price']) * pnl_data['net_qty']
+                    if net_qty > 0:
+                        gross_pnl = (current_price - cost_price) * net_qty
                         pnl = gross_pnl - total_charges
-                        pnl_percent = ((current_price / pnl_data['cost_price']) - 1) * 100 if pnl_data['cost_price'] > 0 else 0
+                        pnl_percent = ((current_price / cost_price) - 1) * 100 if cost_price > 0 else 0
                     else:
                         gross_pnl = 0
                         pnl = 0
@@ -411,8 +501,8 @@ class PositionGUI:
                     
                     position_info = {
                         'symbol': symbol,
-                        'qty': pnl_data['net_qty'],
-                        'avg_price': round(pnl_data['cost_price'], 2),
+                        'qty': net_qty,
+                        'avg_price': round(cost_price, 2),
                         'current_price': round(current_price, 2),
                         'invested': round(invested_value, 2),
                         'current_value': round(current_value, 2),
@@ -424,10 +514,9 @@ class PositionGUI:
                     }
                     
                     results.append(position_info)
-                    time.sleep(0.3)
                     
                 except Exception as e:
-                    print(f"Error processing {symbol}: {e}")
+                    print(f"Error calculating P&L for {symbol}: {e}")
                     continue
             
             self.positions_data = results
@@ -436,6 +525,8 @@ class PositionGUI:
         except Exception as e:
             print(f"Error fetching positions: {e}")
             self.root.after(0, self.show_error)
+        finally:
+            self.is_refreshing = False
     
     def clear_table(self):
         """Clear the table"""
@@ -553,7 +644,7 @@ class PositionGUI:
                     else:
                         failed.append(pos['symbol'])
                     
-                    time.sleep(1)
+                    time.sleep(0.5)  # Reduced delay for closing positions
                     
                 except Exception as e:
                     print(f"Error closing {pos['symbol']}: {e}")

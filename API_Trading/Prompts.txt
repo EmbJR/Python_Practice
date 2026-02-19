@@ -19,3 +19,20 @@
 	
 - When I run the code in "Groww/AI_Codes/Kilo_Code/Position_P&L_List_1.py" I got the following error. Please resolve it.
 	Error:- "[ERROR] Failed to close position for AZAD: GrowwAPI.place_order() missing 1 required positional argument: 'segment'"
+
+- I want you to add the tkinter based GUI for the functionality in code "Groww/AI_Codes/Kilo_Code/Position_P&L_List_1.py".
+  The GUI consists the main screen where all ongoing positions are displayed with information which are displayed on the code.
+  Also I wan to add the functionality where I can select the positions and click one button named Exit by which I can immediately exit the selected position. Keep the GUI simple but easy to understand with coloured text.
+  
+- I got the following error in the code in file "Groww/AI_Codes/Kilo_Code/Holdings_GUI.py". Please fix it.
+		"Error getting LTP for PROFINC: 'NSE_PROFINC'
+		Error getting LTP for GILADAFINS: 'NSE_GILADAFINS'
+		Error getting LTP for DECNGOLD: 'NSE_DECNGOLD'
+		Error getting LTP for None: 'NSE_None'"
+		
+- I want you to please edit the code in "Groww/AI_Codes/Kilo_Code/Holdings_GUI.py" for below changes.
+	1> The listing of the holding takes too much time. So reduce the unwanted delays and make system faster.
+	2> Make the holdings list automatically updated every 1 second with all information.
+	
+- I found that groww.get_ltp() is taking longer time due to which overall performance of system gets impacted in code "Holdings_GUI.py".
+I want you to add the mechanizem where this api (groww.get_ltp()) called parallaly to reduce the time taken by repeatadly calling this api one by on.

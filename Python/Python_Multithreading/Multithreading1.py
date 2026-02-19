@@ -117,6 +117,7 @@ import time
 
 def print_name(name, *args):
     print(name, *args)
+    time.sleep(5)
 
 name = "Tutorialspoint..."
 # Create and start threads
@@ -206,10 +207,12 @@ class myThread (threading.Thread):
         self.threadID = threadID
         self.name = name
         self.q = q
+
     def run(self):
         print ("Starting " + self.name)
         process_data(self.name, self.q)
         print ("Exiting " + self.name)
+
 def process_data(threadName, q):
     while not exitFlag:
         queueLock.acquire()
@@ -239,7 +242,7 @@ for word in nameList:
 queueLock.release()
 # Wait for queue to empty
 while not workQueue.empty():
-pass
+    pass
 
 # Notify threads it's time to exit
 exitFlag = 1
@@ -287,6 +290,7 @@ def func(x):
     for n in range(x):
         print('{} Running'.format(threading.current_thread().name), n)
     print('Internal Thread Finished...')
+
 # Create thread objects
 t1 = threading.Thread(target=func, args=(2,))
 t2 = threading.Thread(target=func, args=(3,))
@@ -332,9 +336,6 @@ print("Main Thread Finished...")
 
 
 '''------------------------- Python - Creating a Thread ---------------------
-Creating a thread in Python involves initiating a separate flow of execution within a
-program, allowing multiple operations to run concurrently. This is particularly useful for
-performing tasks simultaneously, such as handling various I/O operations in parallel.
 Python provides multiple ways to create and manage threads.
      Creating a thread using the threading module is generally recommended due to its
         higher-level interface and additional functionalities.
@@ -457,10 +458,10 @@ In Python, starting a thread involves using the start() method provided by the T
 class in the threading module. This method initiates the thread's activity and automatically
 calls its run() method in a separate thread of execution. Meaning that, when you call
 start() on each thread object (for example., thread1, thread2, thread3) to initiate their
-execution,
-Python launches separate threads that concurrently execute the run() method defined in
+execution, Python launches separate threads that concurrently execute the run() method defined in
 each Thread instance. The main thread continues its execution after starting the child
 threads.
+
 In this tutorial, you will see a detailed explanation and example of how to use the start()
 method effectively in multi-threaded programming to understand its behavior in multi-
 thread applications.'''
@@ -520,6 +521,7 @@ thread1.start()
 thread3.start()
 print("Exiting Main Thread")
 
+'''----------- Revision till --------------'''
 '''------------------------------------ Python - Joining the Threads ------------------------
 In Python, joining the threads means using the join() method to wait for one thread to
 finish before moving on to others. This is useful in multithreaded programming to make
@@ -682,3 +684,766 @@ t3.name = 'custom_name' # Assigning name after thread creation
 t3.start()
 t3.join()
 print(threading.current_thread().name) # Print main thread's name
+
+
+'''---------------------------- Python - Thread Scheduling -------------------------
+Thread scheduling in Python is a process of deciding which thread runs at any given time.
+In a multi-threaded program, multiple threads are executed independently, allowing for
+parallel execution of tasks. However, Python does not have built-in support for controlling
+thread priorities or scheduling policies directly. Instead, it relies on the operating system's
+thread scheduler.
+
+Python threads are mapped to native threads of the host operating system, such as POSIX
+threads (pthreads) on Unix-like systems or Windows threads. The operating system's
+scheduler manages the execution of these threads, including context switching, thread
+priorities, and scheduling policies. Python provides basic thread scheduling capabilities
+through the threading.Timer class and the sched module.
+
+In this tutorial will learn the basics of thread scheduling in Python, including how to use
+the sched module for scheduling tasks and the threading.Timer class for delayed execution
+of functions.'''
+
+''' Scheduling Threads using the Timer Class
+The Timer class of the Python threading module allows you to schedule a function to be
+called after a certain amount of time. This class is a subclass of Thread and serves as an
+example of creating custom threads.
+
+You start a timer by calling its start() method, similar to threads. If needed, you can stop
+the timer before it begins by using the cancel() method. Note that the actual delay before
+the action is executed might not match the exact interval specified.
+
+Example
+This example demonstrates how to use the threading.Timer() class to schedule and
+manage the execution of tasks (custom threads) in Python.'''
+import threading
+import time
+# Define the event function
+def schedule_event(name, start):
+    now = time.time()
+    elapsed = int(now - start)
+    print('Elapsed:', elapsed, 'Name:', name)
+# Start time
+start = time.time()
+print('START:', time.ctime(start))
+
+# Schedule events using Timer
+t1 = threading.Timer(3, schedule_event, args=('EVENT_1', start))
+t2 = threading.Timer(2, schedule_event, args=('EVENT_2', start))
+# Start the timers
+t1.start()
+t2.start()
+t1.join()
+t2.join()
+# End time
+end = time.time()
+print('End:', time.ctime(end))
+
+''' Scheduling Threads using the sched Module
+The sched module in Python's standard library provides a way to schedule tasks. It
+implements a generic event scheduler for running tasks at specific times. It provides
+similar tools like task scheduler in windows or Linux.
+
+Key Classes and Methods of the sched Module
+The scheduler() class is defined in the sched module is used to create a scheduler object.
+Here is the syntax of the class
+        scheduler(timefunc=time.monotonic, delayfunc=time.sleep)
+
+The methods defined in scheduler class include −
+     scheduler.enter(delay, priority, action, argument=(), kwargs={}) −
+        Events can be scheduled to run after a delay, or at a specific time. To schedule
+        them with a delay, enter() method is used.
+     scheduler.cancel(event) − Remove the event from the queue. If the event is
+        not an event currently in the queue, this method will raise a ValueError.
+     scheduler.run(blocking=True) − Run all scheduled events.
+
+Events can be scheduled to run after a delay, or at a specific time. To schedule them with
+a delay, use the enter() method, which takes four arguments as below.
+     A number representing the delay
+     A priority value
+     The function to call
+     A tuple of arguments for the function
+
+Example:- 
+This example demonstrates how to schedule events to run after a delay using the sched
+module. It schedules two different events'''
+
+import sched
+import time
+scheduler = sched.scheduler(time.time, time.sleep)
+def schedule_event(name, start):
+    now = time.time()
+    elapsed = int(now - start)
+    print('elapsed=',elapsed, 'name=', name)
+start = time.time()
+print('START:', time.ctime(start))
+scheduler.enter(2, 1, schedule_event, ('EVENT_1', start))
+scheduler.enter(5, 1, schedule_event, ('EVENT_2', start))
+scheduler.run()
+# End time
+end = time.time()
+print('End:', time.ctime(end))
+
+''' Example
+Let's take another example to understand the concept better. This example schedules a
+function to perform an addition after a 4-second delay using the sched module in Python.'''
+
+import sched
+from datetime import datetime
+import time
+def addition(a,b):
+    print("Performing Addition : ", datetime.now())
+    print("Time : ", time.monotonic())
+    print("Result {}+{} =".format(a, b), a+b)
+s = sched.scheduler()
+print("Start Time : ", datetime.now())
+event1 = s.enter(4, 1, addition, argument = (5,6))
+print("Event Created : ", event1)
+s.run()
+print("End Time : ", datetime.now())
+
+'''------------------------- Python - Thread Pools ---------------------------
+A thread pool is a mechanism that automatically manages multiple threads efficiently,
+allowing tasks to be executed concurrently. Python does not provide thread pooling directly
+through the threading module.
+
+Instead, it offers thread-based pooling through the multiprocessing.dummy module and
+the concurrent.futures module. These modules provide convenient interfaces for creating
+and managing thread pools, making it easier to perform concurrent task execution.'''
+
+''' What is a Thread Pool?
+A thread pool is a collection of threads that are managed by a pool. Each thread in the
+pool is called a worker or a worker thread. These threads can be reused to perform multiple
+tasks, which reduces the burden of creating and destroying threads repeatedly.
+
+Thread pools control the creation of threads and their life cycle, making them more
+efficient for handling large numbers of tasks.
+We can implement thread-pools in Python using the following classes −
+     Python ThreadPool Class
+     Python ThreadPoolExecutor Class'''
+
+''' Using Python ThreadPool Class
+The multiprocessing.pool.ThreadPool class provides a thread pool interface within the
+multiprocessing module. It manages a pool of worker threads to which jobs can be
+submitted for concurrent execution.
+
+A ThreadPool object simplifies the management of multiple threads by handling the
+creation and distribution of tasks among the worker threads. It shares an interface with
+the Pool class, originally designed for processes, but has been adjusted to work with
+threads too.
+
+ThreadPool instances are fully interface-compatible with Pool instances and should be
+managed either as a context manager or by calling close() and terminate() manually.
+
+Example:- 
+This example demonstrates the parallel execution of the square and cube functions on the
+list of numbers using the Python thread pool, where each function is applied to the
+numbers concurrently with up to 3 threads, each with a delay of 1 second between
+executions.'''
+
+from multiprocessing.dummy import Pool as ThreadPool
+import time
+def square(number):
+    sqr = number * number
+    time.sleep(1)
+    print("Number:{} Square:{}".format(number, sqr))
+def cube(number):
+    cub = number*number*number
+    time.sleep(1)
+    print("Number:{} Cube:{}".format(number, cub))
+numbers = [1, 2, 3, 4, 5]
+pool = ThreadPool(3)
+pool.map(square, numbers)
+pool.map(cube, numbers)
+pool.close()
+
+''' Using Python ThreadPoolExecutor Class
+The ThreadPoolExecutor class of the Python the concurrent.futures module provides a
+high-level interface for asynchronously executing functions using threads. The
+concurrent.futures module includes Future class and two Executor classes −
+ThreadPoolExecutor and ProcessPoolExecutor.'''
+
+''' The Future Class
+The concurrent.futures.Future class is responsible for handling asynchronous execution of
+any callable such as a function. To obtain a Future object, you should call the submit()
+method on any Executor object. It should not be created directly by its constructor.
+
+Important methods in the Future class are
+     result(timeout=None): This method returns the value returned by the call. If the
+        call hasn't yet completed, then this method will wait up to timeout seconds. If the
+        call hasn't completed in timeout seconds, then a TimeoutError will be raised. If
+        timeout is not specified, there is no limit to the wait time.
+     cancel(): This method, attempt to cancel the call. If the call is currently being
+        executed or finished running and cannot be cancelled then the method will return
+        a boolean value False. Otherwise the call will be cancelled and the method returns
+        True.
+     cancelled(): Returns True if the call was successfully cancelled.
+     running(): Returns True if the call is currently being executed and cannot be
+        cancelled.
+     done(): Returns True if the call was successfully cancelled or finished running.
+'''
+
+''' The ThreadPoolExecutor Class
+This class represents a pool of specified number maximum worker threads to execute calls
+asynchronously.
+concurrent.futures.ThreadPoolExecutor(max_threads)
+
+Example
+Here is an example that uses the concurrent.futures.ThreadPoolExecutor class to manage
+and execute tasks asynchronously in Python. Specifically, it shows how to submit multiple
+tasks to a thread pool and how to check their execution status.'''
+
+from concurrent.futures import ThreadPoolExecutor
+from time import sleep
+def square(numbers):
+    for val in numbers:
+        ret = val*val
+        sleep(1)
+        print("Number:{} Square:{}".format(val, ret))
+def cube(numbers):
+    for val in numbers:
+        ret = val*val*val
+        sleep(1)
+        print("Number:{} Cube:{}".format(val, ret))
+if __name__ == '__main__':
+    numbers = [1,2,3,4,5]
+    executor = ThreadPoolExecutor(4)
+    thread1 = executor.submit(square, (numbers))
+    thread2 = executor.submit(cube, (numbers))
+    print("Thread 1 executed ? :",thread1.done())
+    print("Thread 2 executed ? :",thread2.done())
+    sleep(2)
+    print("Thread 1 executed ? :",thread1.done())
+    print("Thread 2 executed ? :",thread2.done())
+
+'''----------------------------------Python - Main Thread -----------------------------
+In Python, the main thread is the initial thread that starts when the Python interpreter is
+executed. It is the default thread within a Python process, responsible for managing the
+program and creating additional threads. Every Python program has at least one thread
+of execution called the main thread.
+
+The main thread by default is a non-daemon thread. In this tutorial you will see the
+detailed explanation with relevant examples about main thread in Python programming.'''
+
+''' Accessing the Main Thread
+The threading module in Python provides functions to access the threads. Here are the
+key functions −
+     threading.current_thread(): This function returns a threading.Thread instance
+        representing the current thread.
+     threading.main_thread(): Returns a threading.Thread instance representing the
+        main thread.
+
+Example:- 
+The threading.current_thread() function returns a threading.Thread instance representing
+the current thread.'''
+
+import threading
+name = 'Tutorialspoint'
+print('Output:', name)
+print(threading.current_thread())
+
+''' Example
+This example demonstrates how to use the threading.main_thread() function to get a
+reference to the main thread. And it is also shows the difference between the main thread
+and other threads using threading.current_thread() function.'''
+
+import threading
+import time
+def func(x):
+    time.sleep(x)
+    if not threading.current_thread() is threading.main_thread():
+        print('threading.current_thread() not threading.main_thread()')
+t = threading.Thread(target=func, args=(0.5,))
+t.start()
+print(threading.main_thread())
+print("Main thread finished")
+
+''' Main Thread Behavior in Python
+The main thread will exit whenever it has finished executing all the code in your script that
+is not started in a separate thread. For instance, when you start a new thread using start()
+method, the main thread will continue to execute the remaining code in the script until it
+reaches the end and then exit.
+
+Since the other threads are started in a non-daemon mode by default, they will continue
+running until they are finished, even if the main thread has exited.
+
+Example
+The following example shows the main thread behavior in a python multithreaded
+program.'''
+
+import threading
+import time
+def func(x):
+    print('Current Thread Details:',threading.current_thread())
+    for n in range(x):
+        print('Internal Thread Running', n)
+    print('Internal Thread Finished...')
+t = threading.Thread(target=func, args=(6,))
+t.start()
+for i in range(3):
+    print('Main Thread Running',i)
+print("Main Thread Finished...")
+
+''' Main Thread Waiting for Other Threads
+To ensure that the main thread waits for all other threads to finish, you can join the threads
+using the join() method. By using the join() method, you can control the execution flow
+and ensure that the main thread properly waits for all other threads to complete their
+tasks before exiting. This helps in managing the lifecycle of threads in a multi-threaded
+Python program effectively.
+
+Example
+This example demonstrates how to properly manage the main thread and ensure it does
+not exit before the worker threads have finished their tasks.'''
+
+from threading import Thread
+from time import sleep
+def my_function_1():
+    print("Worker 1 started")
+    sleep(1)
+    print("Worker 1 done")
+def my_function_2(main_thread):
+    print("Worker 2 waiting for Worker 1 to finish")
+    main_thread.join()
+    print("Worker 2 started")
+    sleep(1)
+    print("Worker 2 done")
+worker1 = Thread(target=my_function_1)
+worker2 = Thread(target=my_function_2, args=(worker1,))
+worker1.start()
+worker2.start()
+for num in range(6):
+    print("Main thread is still working on task", num)
+    sleep(0.60)
+worker1.join()
+print("Main thread Completed")
+
+'''----------------------------- Python - Thread Priority ---------------------------
+In Python, currently thread priority is not directly supported by the threading module.
+unlike Java, Python does not support thread priorities, thread groups, or certain thread
+control mechanisms like destroying, stopping, suspending, resuming, or interrupting
+threads.
+
+Python threads are designed simple and are loosely based on Java's threading model. This
+is because of Python's Global Interpreter Lock (GIL), which manages Python threads.
+
+However, you can simulate priority-based behavior using techniques such as sleep
+durations, custom scheduling logic within threads or using the additional module which
+manages task priorities'''
+
+''' Setting the Thread Priority Using Sleep()
+You can simulate thread priority by introducing delays or using other mechanisms to
+control the execution order of threads. One common approach to simulate thread priority
+is by adjusting the sleep duration of your threads.
+
+Threads with a lower priority sleep longer, and threads with a high priority sleep shorter.
+
+Example
+Here's a simple example to demonstrate how to customize the thread priorities using the
+delays in Python threads. In this example, Thread-2 completes before Thread-1 because
+it has a lower priority value, resulting in a shorter sleep time.'''
+import threading
+import time
+class DummyThread(threading.Thread):
+    def __init__(self, name, priority):
+        threading.Thread.__init__(self)
+        self.name = name
+        self.priority = priority
+    def run(self):
+        name = self.name
+        time.sleep(1.0 * self.priority)
+        print(f"{name} thread with priority {self.priority} is running")
+# Creating threads with different priorities
+t1 = DummyThread(name='Thread-1', priority=4)
+t2 = DummyThread(name='Thread-2', priority=1)
+# Starting the threads
+t1.start()
+t2.start()
+# Waiting for both threads to complete
+t1.join()
+t2.join()
+print('All Threads are executed')
+
+''' Adjusting Python Thread Priority on Windows
+On Windows Operating system you can manipulate the thread priority using the ctypes
+module. This is one of the Python’s standard module used for interacting with the Windows
+API.
+
+Example
+This example demonstrates how to manually set the priority of threads in Python on a
+Windows system using the ctypes module.'''
+
+import threading
+import ctypes
+import time
+# Constants for Windows API
+w32 = ctypes.windll.kernel32
+SET_THREAD = 0x20
+PRIORITIZE_THE_THREAD = 1
+class MyThread(threading.Thread):
+    def __init__(self, start_event, name, iterations):
+        super().__init__()
+        self.start_event = start_event
+        self.thread_id = None
+        self.iterations = iterations
+        self.name = name
+
+    def set_priority(self, priority):
+        if not self.is_alive():
+            print('Cannot set priority for a non-active thread')
+            return        
+        thread_handle = w32.OpenThread(SET_THREAD, False, self.thread_id)
+        success = w32.SetThreadPriority(thread_handle, priority)
+        w32.CloseHandle(thread_handle)
+        if not success:
+            print('Failed to set thread priority:', w32.GetLastError())
+    def run(self):
+        self.thread_id = w32.GetCurrentThreadId()
+        self.start_event.wait()
+        while self.iterations:
+            print(f"{self.name} running")
+            start_time = time.time()
+            while time.time() - start_time < 1:
+                pass
+        self.iterations -= 1
+
+# Create an event to synchronize thread start
+start_event = threading.Event()
+# Create threads
+thread_normal = MyThread(start_event, name='normal', iterations=4)
+thread_high = MyThread(start_event, name='high', iterations=4)
+# Start the threads
+thread_normal.start()
+thread_high.start()
+# Adjusting priority of 'high' thread
+thread_high.set_priority(PRIORITIZE_THE_THREAD)
+# Trigger thread execution
+start_event.set()
+
+''' Prioritizing Python Threads Using the Queue Module
+The queue module in Python's standard library is useful in threaded programming when
+information must be exchanged safely between multiple threads. 
+
+The Priority Queue class
+in this module implements all the required locking semantics.
+With a priority queue, the entries are kept sorted (using the heapq module) and the lowest
+valued entry is retrieved first.
+
+The Queue objects have following methods to control the Queue −
+     get() − The get() removes and returns an item from the queue.
+     put() − The put adds item to a queue.
+     qsize() − The qsize() returns the number of items that are currently in the queue.
+     empty() − The empty( ) returns True if queue is empty; otherwise, False.
+     full() − the full() returns True if queue is full; otherwise, False.`
+
+queue.PriorityQueue(maxsize=0)
+
+This is the Constructor for a priority queue. maxsize is an integer that sets the upper limit
+on the number of items that can be placed in the queue. If maxsize is less than or equal
+to zero, the queue size is infinite.
+
+The lowest valued entries are retrieved first (the lowest valued entry is the one that would
+be returned by min(entries)). 
+A typical pattern for entries is a tuple in the form − (priority_number, data)
+
+Example
+This example demonstrates the use of the PriorityQueue class in the queue module to
+manage task priorities between the two threads.'''
+
+from time import sleep
+from random import random, randint
+from threading import Thread
+from queue import PriorityQueue
+queue = PriorityQueue()
+
+def producer(queue):
+    print('Producer: Running')
+    for i in range(5):
+        # create item with priority
+        value = random()
+        priority = randint(0, 5)
+        item = (priority, value)
+        queue.put(item)
+# wait for all items to be processed
+    queue.join()
+    queue.put(None)
+    print('Producer: Done')
+
+def consumer(queue):
+    print('Consumer: Running')
+    while True:
+        # get a unit of work
+        item = queue.get()
+        if item is None:
+            break
+        sleep(item[1])
+        print(item)
+        queue.task_done()
+    print('Consumer: Done')
+
+producer = Thread(target=producer, args=(queue,))
+producer.start()
+consumer = Thread(target=consumer, args=(queue,))
+consumer.start()
+producer.join()
+consumer.join()
+
+'''-------------------------------- Python - Daemon Threads ------------------------
+Daemon threads in Python are useful for running background tasks that are not critical to
+the program's operation. They allow you to run tasks in the background without worrying
+about keeping track of them.
+Python provides two types of threads: non-daemon and daemon threads. By default,
+threads are non-daemon threads. This tutorial provides a detailed explanation with
+relevant examples about daemon threads in Python programming.'''
+
+''' Overview of Daemon Threads
+Sometimes, it is necessary to execute a task in the background. A special type of thread
+is used for background tasks, called a daemon thread. These threads handle non-critical tasks that may be
+useful to the application but do not hamper it if they fail or are canceled while they are
+active and running.
+
+Also, a daemon thread will not have control over when it is terminated. The program will
+terminate once all non-daemon threads finish, even if there are daemon threads still
+running at that point of time.
+
+Difference Between Daemon & Non-Daemon Threads
+
++------------------+------------------+
+| Daemon           | Non-daemon       |
++------------------+------------------+
+| A process will   | A process will   |
+| exit if only     | not exit if at   |
+| daemon threads   | least one        |
+| are running (or  | non-daemon       |
+| if no threads    | thread is        |
+| are running).    | running.         |
++------------------+------------------+
+| Daemon threads   | Non-daemon       |
+| are used for     | threads are used |
+| background tasks. | for critical     |
+|                  | tasks.           |
++------------------+------------------+
+| Daemon threads   | Non-daemon       |
+| are terminated    | threads run to   |
+| abruptly.        | completion.      |
++------------------+------------------+
+
+Daemon threads can perform tasks such as −
+     Create a file that stores Log information in the background.
+     Perform web scraping in the background.
+     Save the data automatically into a database in the background'''
+
+'''Creating a Daemon Thread in Python
+To create a daemon thread, you need to set the daemon property of the Thread constructor
+to True.
+    t1=threading.Thread(daemon=True)
+By default, the daemon property is set to None, If you change it to not None, daemon
+explicitly sets whether the thread is daemonic.
+
+Example:- 
+Take a look at the following example to create a daemon thread and check whether the
+thread isusing the daemon attribute'''
+
+import threading
+from time import sleep
+# function to be executed in a new thread
+def run():
+    # get the current thread
+    thread = threading.current_thread()
+    # is it a daemon thread?
+    print(f'Daemon thread: {thread.daemon}')
+# Create a new thread and set it as daemon
+thread = threading.Thread(target=run, daemon=True)
+# start the thread
+thread.start()
+print('Is Main Thread is Daemon thread:', threading.current_thread().daemon)
+# Block for a short time to allow the daemon thread to run
+sleep(0.5)
+
+''' If a thread object is created in the main thread without any parameters, then the created
+thread will be a non-daemon thread because the main thread is not a daemon thread.
+Therefore, all threads created in the main thread default to non-daemon. However, we
+can change the daemon property to True by using the Thread.daemon attribute before
+starting the thread.
+Example
+Here is an example'''
+
+import threading
+from time import sleep
+# function to be executed in a new thread
+def run():
+    # get the current thread
+    thread = threading.current_thread()
+    # is it a daemon thread?
+    print(f'Daemon thread: {thread.daemon}')
+# Create a new thread
+thread = threading.Thread(target=run)
+# Using the daemon property set the thread as daemon before starting the thread
+thread.daemon = True
+# start the thread
+thread.start()
+print('Is Main Thread is Daemon thread:', threading.current_thread().daemon)
+# Block for a short time to allow the daemon thread to run
+sleep(0.5)
+
+''' Managing the Daemon Thread Attribute
+If you attempt to set the daemon status of a thread after starting it, then a RuntimeError
+will be raised.
+Example
+Here is another example that demonstrates getting the RuntimeError when you try to set
+the daemon status of a thread after starting it.'''
+
+from time import sleep
+from threading import current_thread
+from threading import Thread
+# function to be executed in a new thread
+def run():
+    # get the current thread
+    thread = current_thread()
+    # is it a daemon thread?
+    print(f'Daemon thread: {thread.daemon}')
+    thread.daemon = True
+# create a new thread
+thread = Thread(target=run)
+# start the new thread
+thread.start()
+# block for a 0.5 sec for daemon thread to run
+sleep(0.5)
+
+'''-------------------------------- Python - Synchronizing Threads ------------------------
+In Python, when multiple threads are working concurrently with shared resources, it's
+important to synchronize their access to maintain data integrity and program correctness.
+
+Synchronizing threads in python can be achieved using various synchronization primitives
+provided by the threading module, such as locks, conditions, semaphores, and barriers to
+control access to shared resources and coordinate the execution of multiple threads.
+'''
+
+''' Thread Synchronization using Locks
+The lock object in the Python's threading module provide the simplest synchronization
+primitive. They allow threads to acquire and release locks around critical sections of code,
+ensuring that only one thread can execute the protected code at a time.
+
+A new lock is created by calling the Lock() method, which returns a lock object. The lock
+can be acquired using the acquire(blocking) method, which force the threads to run
+synchronously. The optional blocking parameter enables you to control whether the thread
+waits to acquire the lock and released using the release() method.
+
+Example
+The following example demonstrates how to use locks (the threading.Lock() method) to
+synchronize threads in Python, ensuring that multiple threads access shared resources
+safely and correctly.'''
+
+import threading
+counter = 10
+def increment(theLock, N):
+    global counter
+    for i in range(N):
+        theLock.acquire()
+        counter += 1
+        theLock.release()
+
+lock = threading.Lock()
+t1 = threading.Thread(target=increment, args=[lock, 2])
+t2 = threading.Thread(target=increment, args=[lock, 10])
+t3 = threading.Thread(target=increment, args=[lock, 4])
+
+t1.start()
+t2.start()
+t3.start()
+# Wait for all threads to complete
+for thread in (t1, t2, t3):
+    thread.join()
+print("All threads have completed")
+print("The Final Counter Value:", counter)
+
+''' Condition Objects for Synchronizing Python Threads
+Condition objects enable threads to wait until notified by another thread. They are useful
+for providing communication between the threads. The wait() method is used to block a
+thread until it is notified by another thread through notify() or notify_all().
+
+Example
+This example demonstrates how Condition objects can synchronize threads using the
+notify() and wait() methods'''
+
+import threading
+counter = 0
+# Consumer function
+def consumer(cv):
+    global counter
+    with cv:
+        print("Consumer is waiting")
+        cv.wait() # Wait until notified by increment
+        print("Consumer has been notified. Current Counter value:", counter)
+
+# increment function
+def increment(cv, N):
+    global counter
+    with cv:
+        print("increment is producing items")
+        for i in range(1, N + 1):
+            counter += i # Increment counter by i
+        # Notify the consumer
+        cv.notify()
+        print("Increment has finished")
+
+# Create a Condition object
+cv = threading.Condition()
+# Create and start threads
+consumer_thread = threading.Thread(target=consumer, args=[cv])
+increment_thread = threading.Thread(target=increment, args=[cv, 5])
+consumer_thread.start()
+increment_thread.start()
+consumer_thread.join()
+increment_thread.join()
+print("The Final Counter Value:", counter)
+
+''' Synchronizing threads using the join() Method
+The join() method in Python's threading module is used to wait until all threads have
+completed their execution. This is a straightforward way to synchronize the main thread
+with the completion of other threads.
+
+Example
+This demonstrates synchronization of threads using the join() method to ensure that the
+main thread waits for all started threads to complete their work before proceeding.'''
+
+import threading
+import time
+class MyThread(threading.Thread):
+    def __init__(self, threadID, name, counter):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.counter = counter
+    def run(self):
+        print("Starting " + self.name)
+        print_time(self.name, self.counter, 3)
+
+def print_time(threadName, delay, counter):
+    while counter:
+        time.sleep(delay)
+        print("%s: %s" % (threadName, time.ctime(time.time())))
+        counter -= 1
+
+threads = []
+# Create new threads
+thread1 = MyThread(1, "Thread-1", 1)
+thread2 = MyThread(2, "Thread-2", 2)
+# Start the new Threads
+thread1.start()
+thread2.start()
+# Join the threads
+thread1.join()
+thread2.join()
+print("Exiting Main Thread")
+
+''' Additional Synchronization Primitives
+In addition to the above synchronization primitives, Python's threading module offers: −
+     RLocks (Reentrant Locks): A variant of locks that allow a thread to acquire the
+        same lock multiple times before releasing it, useful in recursive functions or nested
+        function calls.
+     Semaphores:Similar to locks but with a counter. Threads can acquire the
+        semaphore up to a certain limit defined during initialization. Semaphores are useful
+        for limiting access to resources with a fixed capacity.
+     Barriers: Allows a fixed number of threads to synchronize at a barrier point and
+        continue executing only when all threads have reached that point. Barriers are
+        useful for coordinating a group of threads that must all complete a certain phase
+        of execution before any of them can proceed further.'''

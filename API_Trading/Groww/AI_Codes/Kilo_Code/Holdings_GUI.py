@@ -13,6 +13,7 @@ import pandas as pd
 import time
 from datetime import datetime
 import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Import growwapi directly
 from growwapi import GrowwAPI
@@ -36,7 +37,7 @@ class GUIColors:
 
 
 # Configuration - Use token from AGENTS.md
-API_AUTH_TOKEN = "eyJraWQiOiJaTUtjVXciLCJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3NzEzNzQ2MDAsImlhdCI6MTc3MTMwOTk5MiwibmJmIjoxNzcxMzA5OTkyLCJzdWIiOiJ7XCJ0b2tlblJlZklkXCI6XCJlZjRlMjUzNS0zOWJiLTQzOGItYjE1MC0wMDEzN2RiNGU2ODhcIixcInZlbmRvckludGVncmF0aW9uS2V5XCI6XCJlMzFmZjIzYjA4NmI0MDZjODg3NGIyZjZkODQ5NTMxM1wiLFwidXNlckFjY291bnRJZFwiOlwiYzVkZjhiMGUtZTg5Ni00MmIyLWEzYjUtNzg5MmNiMDllMGY0XCIsXCJkZXZpY2VJZFwiOlwiZDFjZmEzZjgtMzFmYS01ZjcwLWJjN2MtMjUxMDA0ZTU1MGQxXCIsXCJzZXNzaW9uSWRcIjpcIjlmODlmZTJkLTRhZGYtNGU3Zi1hOGY5LTM1MjUzZTEyN2E5NVwiLFwiYWRkaXRpb25hbERhdGFcIjpcIno1NC9NZzltdjE2WXdmb0gvS0EwYksxMnV6S0FTTkdXV3VYZGtEdy9jSEZSTkczdTlLa2pWZDNoWjU1ZStNZERhWXBOVi9UOUxIRmtQejFFQisybTdRPT1cIixcInJvbGVcIjpcIm9yZGVyLWJhc2ljLGxpdmVfZGF0YS1iYXNpYyxub25fdHJhZGluZy1iYXNpYyxvcmRlcl9yZWFkX29ubHktYmFzaWNcIixcInNvdXJjZUlwQWRkcmVzc1wiOlwiMjQwNToyMDE6MjAxZjoyODVkOmZkZGY6MWNmMDo5ZDg3OjQ2NDksMTYyLjE1OC4xOTEuMjE0LDM1LjI0MS4yMy4xMjNcIixcInR3b0ZhRXhwaXJ5VHNcIjoxNzcxMzc0NjAwMDAwfSIsImlzcyI6ImFwZXgtYXV0aC1wcm9kLWFwcCJ9.gZu9npYxGj7vs9Eb2T5afJurVH75y1fq6vuB6NAyK1eB5Xo7zLIZnGGmLQTTNz7_GAamdLLTNAODSchg5PKJWg"
+API_AUTH_TOKEN = "eyJraWQiOiJaTUtjVXciLCJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3NzE1NDc0MDAsImlhdCI6MTc3MTQ4MDU0OSwibmJmIjoxNzcxNDgwNTQ5LCJzdWIiOiJ7XCJ0b2tlblJlZklkXCI6XCI0YjZkODRhNi0zYmE2LTQ1ODAtODFlYS03MGM5ZjY2YmVkYmJcIixcInZlbmRvckludGVncmF0aW9uS2V5XCI6XCJlMzFmZjIzYjA4NmI0MDZjODg3NGIyZjZkODQ5NTMxM1wiLFwidXNlckFjY291bnRJZFwiOlwiYzVkZjhiMGUtZTg5Ni00MmIyLWEzYjUtNzg5MmNiMDllMGY0XCIsXCJkZXZpY2VJZFwiOlwiZDFjZmEzZjgtMzFmYS01ZjcwLWJjN2MtMjUxMDA0ZTU1MGQxXCIsXCJzZXNzaW9uSWRcIjpcIjIxMjY3MTU4LTgyODAtNDY2ZS1iZWZlLTRmZWE3NzA5MDU3NFwiLFwiYWRkaXRpb25hbERhdGFcIjpcIno1NC9NZzltdjE2WXdmb0gvS0EwYksxMnV6S0FTTkdXV3VYZGtEdy9jSEZSTkczdTlLa2pWZDNoWjU1ZStNZERhWXBOVi9UOUxIRmtQejFFQisybTdRPT1cIixcInJvbGVcIjpcIm9yZGVyLWJhc2ljLGxpdmVfZGF0YS1iYXNpYyxub25fdHJhZGluZy1iYXNpYyxvcmRlcl9yZWFkX29ubHktYmFzaWNcIixcInNvdXJjZUlwQWRkcmVzc1wiOlwiMjQwNToyMDE6MjAxZjoyODVkOjcxOTQ6ZTZjNTo4ZDMxOmVjMGMsMTYyLjE1OC4xOTEuMTg5LDM1LjI0MS4yMy4xMjNcIixcInR3b0ZhRXhwaXJ5VHNcIjoxNzcxNTQ3NDAwMDAwfSIsImlzcyI6ImFwZXgtYXV0aC1wcm9kLWFwcCJ9.mSTdqvAXI8tRWwglKdY-RHYA8oZpDw00S41hpNuHtgbUhPuFh1l1G1uX4i8GqKe4svCHL9CeXJU5I5aDCIHuKQ"
 
 # Initialize Groww API
 groww = GrowwAPI(API_AUTH_TOKEN)
@@ -44,18 +45,77 @@ groww = GrowwAPI(API_AUTH_TOKEN)
 
 def get_current_price(symbol, exchange="NSE"):
     """Get the Last Traded Price (LTP) for a given symbol."""
-    try:
-        ltp_symbol = f"{exchange}_{symbol}"
-        ltp_response = groww.get_ltp(
-            exchange_trading_symbols=ltp_symbol,
-            segment=groww.SEGMENT_CASH
-        )
-        current_price = float(float(ltp_response[ltp_symbol]))
-        time.sleep(0.2)
-        return current_price
-    except Exception as e:
-        print(f"Error getting LTP for {symbol}: {e}")
+    # Skip if symbol is None, empty, or 'None' string
+    if not symbol or symbol == 'None' or str(symbol).strip() == '':
         return None
+    
+    # Try primary exchange first, then try alternate if failed
+    exchanges_to_try = [exchange]
+    if exchange == 'NSE':
+        exchanges_to_try.append('BSE')
+    else:
+        exchanges_to_try.append('NSE')
+    
+    for exch in exchanges_to_try:
+        try:
+            ltp_symbol = f"{exch}_{symbol}"
+            ltp_response = groww.get_ltp(
+                exchange_trading_symbols=ltp_symbol,
+                segment=groww.SEGMENT_CASH
+            )
+            #print("-----------DB6------------")
+            current_price = float(float(ltp_response[ltp_symbol]))
+            return current_price
+        except Exception as e:
+            # If first exchange failed, try the alternate one
+            if exch == exchanges_to_try[0]:
+                continue
+            # Both exchanges failed
+            print(f"Error getting LTP for {symbol}: {e}")
+            return None
+
+
+def _fetch_single_ltp(args):
+    """Helper function to fetch LTP for a single symbol (used for parallel execution)."""
+    symbol, exchange = args
+    return symbol, exchange, get_current_price(symbol, exchange)
+
+
+def get_current_prices_parallel(symbols_exchanges_list):
+    """
+    Get LTP for multiple symbols in parallel using ThreadPoolExecutor.
+    
+    Args:
+        symbols_exchanges_list: List of tuples [(symbol, exchange), ...]
+    
+    Returns:
+        Dictionary mapping symbol to current price
+    """
+    if not symbols_exchanges_list:
+        return {}
+    
+    prices = {}
+    
+    # Use ThreadPoolExecutor to fetch LTP in parallel
+    # Adjust max_workers based on API rate limits
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        # Submit all tasks
+        future_to_symbol = {
+            executor.submit(_fetch_single_ltp, (symbol, exchange)): (symbol, exchange)
+            for symbol, exchange in symbols_exchanges_list
+        }
+        
+        # Collect results as they complete
+        for future in as_completed(future_to_symbol):
+            try:
+                symbol, exchange, price = future.result()
+                prices[symbol] = price
+            except Exception as e:
+                symbol, exchange = future_to_symbol[future]
+                print(f"Error fetching LTP for {symbol}: {e}")
+                prices[symbol] = None
+    
+    return prices
 
 
 def sell_stock(symbol, quantity, exchange="NSE"):
@@ -102,8 +162,10 @@ class HoldingsGUI:
         
         self.holdings_data = []
         self.sell_quantities = {}
-        self.refresh_interval = 10000
+        self.refresh_interval = 1000  # 1 second auto-refresh
         self.is_running = True
+        self.auto_refresh_enabled = True
+        self.is_refreshing = False  # Flag to prevent concurrent refreshes
         
         # Create GUI
         self.create_header()
@@ -113,6 +175,14 @@ class HoldingsGUI:
         
         # Start refresh
         self.trigger_refresh()
+        # Start auto-refresh every 1 second
+        self.auto_refresh()
+    
+    def auto_refresh(self):
+        """Automatically refresh holdings every 1 second."""
+        if self.auto_refresh_enabled:
+            self.trigger_refresh()
+        self.root.after(self.refresh_interval, self.auto_refresh)
     
     def create_header(self):
         header_frame = tk.Frame(self.root, bg=GUIColors.HEADER_BG, height=50)
@@ -301,14 +371,24 @@ class HoldingsGUI:
         self.count_label.pack(side=tk.RIGHT, padx=20)
     
     def trigger_refresh(self):
-        threading.Thread(target=self.refresh_thread, daemon=True).start()
+        """Trigger a refresh in a separate thread if not already refreshing."""
+        if not self.is_refreshing:
+            threading.Thread(target=self.refresh_thread, daemon=True).start()
     
     def refresh_thread(self):
+        """Fetch holdings and update the display."""
+        self.is_refreshing = True
         try:
             holdings_response = groww.get_holdings_for_user()
             holdings_df = pd.DataFrame(holdings_response['holdings'])
-            StockNames = holdings_df['trading_symbol'].tolist()
-            print(StockNames)
+            
+            # Filter out rows with invalid/None symbols early to avoid unnecessary processing
+            holdings_df = holdings_df[holdings_df['trading_symbol'].notna()]
+            holdings_df = holdings_df[holdings_df['trading_symbol'] != 'None']
+            holdings_df = holdings_df[holdings_df['trading_symbol'].str.strip() != '']
+            
+            #StockNames = holdings_df['trading_symbol'].tolist()
+            print("-----------DB1------------")
             
             if holdings_df.empty:
                 self.root.after(0, self.show_empty)
@@ -316,24 +396,80 @@ class HoldingsGUI:
             
             results = []
             
+            # First pass: collect all symbols and their exchanges
+            symbols_exchanges_list = []
+            holdings_with_info = []
+            
             for _, row in holdings_df.iterrows():
                 try:
-                    symbol = row.get('trading_symbol', '')
+                    raw_symbol = row.get('trading_symbol', '')
+                    if not raw_symbol or raw_symbol == 'None':
+                        print("-----------DB2------------")
+                        continue
+                    
+                    symbol = str(raw_symbol)
                     exchange = 'NSE'
-                    if 'BSE_' in str(symbol):
+                    
+                    # Check tradable_exchanges field for correct exchange
+                    tradable_exchanges = row.get('tradable_exchanges', '')
+                    if tradable_exchanges:
+                        if 'BSE' in str(tradable_exchanges):
+                            exchange = 'BSE'
+                        elif 'NSE' in str(tradable_exchanges):
+                            exchange = 'NSE'
+                    
+                    # Remove exchange prefix from symbol for LTP lookup
+                    if 'BSE_' in symbol:
                         exchange = 'BSE'
                         symbol = symbol.replace('BSE_', '')
-                    elif 'NSE_' in str(symbol):
+                    elif 'NSE_' in symbol:
                         symbol = symbol.replace('NSE_', '')
+                    
+                    #print("-----------DB5------------")
+                    # Skip if symbol is empty after processing
+                    if not symbol or symbol.strip() == '':
+                        print(f"Skipping row with empty symbol after processing")
+                        print("-----------DB3------------")
+                        continue
                     
                     quantity = int(row.get('quantity', 0))
                     if quantity <= 0:
+                        print("-----------DB4------------")
                         continue
                     
                     avg_price = float(row.get('average_price', 0))
-                    company_name = str(row.get('tradable_symbol', symbol))
+                    company_name = str(row.get('tradable_symbol', symbol)) if row.get('tradable_symbol') else str(symbol)
                     
-                    current_price = get_current_price(symbol, exchange)
+                    # Collect symbol and exchange for parallel LTP fetch
+                    symbols_exchanges_list.append((symbol, exchange))
+                    
+                    # Store other info for later use
+                    holdings_with_info.append({
+                        'symbol': symbol,
+                        'company': company_name,
+                        'quantity': quantity,
+                        'avg_price': avg_price,
+                        'exchange': exchange
+                    })
+                    
+                except Exception as e:
+                    print(f"Error processing row: {e}")
+                    continue
+            
+            # Fetch all LTPs in parallel
+            print(f"Fetching LTP for {len(symbols_exchanges_list)} symbols in parallel...")
+            ltp_prices = get_current_prices_parallel(symbols_exchanges_list)
+            
+            # Second pass: calculate P&L using fetched prices
+            for holding in holdings_with_info:
+                try:
+                    symbol = holding['symbol']
+                    exchange = holding['exchange']
+                    quantity = holding['quantity']
+                    avg_price = holding['avg_price']
+                    company_name = holding['company']
+                    
+                    current_price = ltp_prices.get(symbol)
                     if current_price is None:
                         current_price = avg_price
                     
@@ -355,10 +491,8 @@ class HoldingsGUI:
                         'exchange': exchange
                     })
                     
-                    time.sleep(0.3)
-                    
                 except Exception as e:
-                    print(f"Error: {e}")
+                    print(f"Error calculating P&L: {e}")
                     continue
             
             self.holdings_data = results
@@ -368,6 +502,8 @@ class HoldingsGUI:
             print(f"Error fetching: {e}")
             error_msg = str(e)
             self.root.after(0, lambda msg=error_msg: self.show_error(msg))
+        finally:
+            self.is_refreshing = False
     
     def show_empty(self):
         self.count_label.config(text="Holdings: 0")
