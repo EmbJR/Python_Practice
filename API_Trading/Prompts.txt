@@ -1,3 +1,8 @@
+- eyJraWQiOiJaTUtjVXciLCJhbGciOiJFUzI1NiJ9.eyJleHAiOjE3NzE2MzM4MDAsImlhdCI6MTc3MTU3ODA0MiwibmJmIjoxNzcxNTc4MDQyLCJzdWIiOiJ7XCJ0b2tlblJlZklkXCI6XCI4N2ZhOWNjMS04ZTg3LTRmZDgtYmIxNy1lZjg2YTE5YjM1MTdcIixcInZlbmRvckludGVncmF0aW9uS2V5XCI6XCJlMzFmZjIzYjA4NmI0MDZjODg3NGIyZjZkODQ5NTMxM1wiLFwidXNlckFjY291bnRJZFwiOlwiYzVkZjhiMGUtZTg5Ni00MmIyLWEzYjUtNzg5MmNiMDllMGY0XCIsXCJkZXZpY2VJZFwiOlwiZDFjZmEzZjgtMzFmYS01ZjcwLWJjN2MtMjUxMDA0ZTU1MGQxXCIsXCJzZXNzaW9uSWRcIjpcImE5ZmQ1Y2I0LWM1NjEtNDBmZS05OTBlLTNjN2U5NGZjODc1OVwiLFwiYWRkaXRpb25hbERhdGFcIjpcIno1NC9NZzltdjE2WXdmb0gvS0EwYksxMnV6S0FTTkdXV3VYZGtEdy9jSEZSTkczdTlLa2pWZDNoWjU1ZStNZERhWXBOVi9UOUxIRmtQejFFQisybTdRPT1cIixcInJvbGVcIjpcIm9yZGVyLWJhc2ljLGxpdmVfZGF0YS1iYXNpYyxub25fdHJhZGluZy1iYXNpYyxvcmRlcl9yZWFkX29ubHktYmFzaWNcIixcInNvdXJjZUlwQWRkcmVzc1wiOlwiMjQwMTo0OTAwOjUxMWM6NWNiODo1MGMxOmNmMzY6Y2I2NDplYmFhLDEwNC4yMi40Ny4xNTYsMzUuMjQxLjIzLjEyM1wiLFwidHdvRmFFeHBpcnlUc1wiOjE3NzE2MzM4MDAwMDB9IiwiaXNzIjoiYXBleC1hdXRoLXByb2QtYXBwIn0.vZn0LZIcBuVQfIKGJ4iFP9rg40hXT5xtjPPxhVpGXL5pwDu4cGOn7feowGP6VNL2BhKCVscM-Ko7XmpwhS9pgw
+
+
+
+
 - Please make me the app in python which can list all current positions with the P&L with trending amounts. Also please write the code in python and simply understandable manner. Also write the code for Groow API based trading platform. Write the code on "Groww/AI_Codes/Kilo_Code/Test2.py" file.
 
 - Please add the loop in the code "Groww/AI_Codes/Kilo_Code/Test2.py" which constantly gets updated every 2 seconds and also it looks veisually good.
@@ -50,3 +55,8 @@ So. Please correct it.
 - Please fix the error below in code "Position_P&L_GUI.py"
 "[INFO] Closing position: symbol=AUROPHARMA, trading_symbol=AUROPHARMA, exchange=NSE, qty=-2
   [ERROR] Failed to close position for AUROPHARMA (exchange=NSE): must be greater than or equal to 1"
+  
+  
+  
+  
+  
