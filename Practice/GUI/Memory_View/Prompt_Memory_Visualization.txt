@@ -1,0 +1,1 @@
+Here, instead of drawing the single rectangle for the each byte, please draw the full rectangle for the continous memory area where the values are filled other then FF. By this way we can save the time to redraw the multiple rectangles which are just near to each other.
