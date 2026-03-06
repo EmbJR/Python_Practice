@@ -1,1 +1,7 @@
 Here, instead of drawing the single rectangle for the each byte, please draw the full rectangle for the continous memory area where the values are filled other then FF. By this way we can save the time to redraw the multiple rectangles which are just near to each other.
+-----------------------------------------------
+I want to add the below things in the "control_frame" fram.
+1> The list view containing all of the serial ports. name it SerialPortList.
+2> The refresh button to update the list "SerialPortList" for the available serial port.
+2> The connect button which if pressed then connects to the serial port which have been selected from "SerialPortList".
+3> The connect button changes to "Disconnect" button if the serial port is connected. If the disconnect button is pressed then the serial port will be disconnected.

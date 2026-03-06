@@ -1,4 +1,6 @@
 import tkinter as tk
+import serial
+import serial.tools.list_ports
 
 class MemoryVisualizer:
     def __init__(self, root):
@@ -13,6 +15,10 @@ class MemoryVisualizer:
         # Initialize buffer: 0xFF is empty
         # This simulates your UART buffer
         self.memory_buffer = [[0xFF for _ in range(self.BYTES_PER_PAGE)] for _ in range(self.PAGES)]
+        
+        # Serial port connection state
+        self.serial_connection = None
+        self.available_ports = []
         
         # MOCK DATA: Fill specific areas to test layout accuracy
         # Fill Page 5, Bytes 10-20
@@ -30,6 +36,31 @@ class MemoryVisualizer:
         control_frame = tk.Frame(self.root, bg="#333")
         control_frame.pack(side=tk.TOP, fill=tk.X)
         
+        # Serial Port Selection Frame
+        serial_frame = tk.Frame(control_frame, bg="#333")
+        serial_frame.pack(side=tk.LEFT, padx=10)
+        
+        tk.Label(serial_frame, text="Serial Port:", fg="white", bg="#333").pack(anchor=tk.W)
+        
+        # Serial port listbox with scrollbar
+        self.SerialPortList = tk.Listbox(serial_frame, height=4, width=20, bg="#1e1e1e", fg="white", selectbackground="#2ECC71")
+        self.SerialPortList.pack(side=tk.LEFT, fill=tk.X, padx=(0, 2))
+        serial_scroll = tk.Scrollbar(serial_frame, orient=tk.VERTICAL, command=self.SerialPortList.yview)
+        serial_scroll.pack(side=tk.LEFT, fill=tk.Y)
+        self.SerialPortList.config(yscrollcommand=serial_scroll.set)
+        
+        # Refresh and Connect buttons frame
+        serial_btn_frame = tk.Frame(control_frame, bg="#333")
+        serial_btn_frame.pack(side=tk.LEFT, padx=5)
+        
+        tk.Button(serial_btn_frame, text="Refresh Ports", command=self.refresh_serial_ports, bg="#555", fg="white").pack(pady=2)
+        self.connect_btn = tk.Button(serial_btn_frame, text="Connect", command=self.toggle_connection, bg="#555", fg="white", width=12)
+        self.connect_btn.pack(pady=2)
+        
+        # Initial port refresh
+        self.refresh_serial_ports()
+        
+        # Zoom controls
         tk.Label(control_frame, text="Zoom:", fg="white", bg="#333").pack(side=tk.LEFT, padx=5)
         tk.Button(control_frame, text="+", width=4, command=self.zoom_in).pack(side=tk.LEFT, padx=2, pady=5)
         tk.Button(control_frame, text="-", width=4, command=self.zoom_out).pack(side=tk.LEFT, padx=2, pady=5)
@@ -204,6 +235,62 @@ class MemoryVisualizer:
         # Optimized: Use list comprehension
         self.memory_buffer = [[0x1E] * self.BYTES_PER_PAGE for _ in range(self.PAGES)]
         self.draw_memory()
+
+    def refresh_serial_ports(self):
+        """Refresh the list of available serial ports"""
+        self.available_ports = []
+        self.SerialPortList.delete(0, tk.END)
+        
+        ports = serial.tools.list_ports.comports()
+        for port in ports:
+            port_name = f"{port.device} - {port.description}"
+            self.available_ports.append(port.device)
+            self.SerialPortList.insert(tk.END, port_name)
+        
+        if not self.available_ports:
+            self.SerialPortList.insert(tk.END, "No ports found")
+
+    def toggle_connection(self):
+        """Toggle between Connect and Disconnect states"""
+        if self.serial_connection is None:
+            # Try to connect
+            self.connect_to_port()
+        else:
+            # Disconnect
+            self.disconnect_from_port()
+
+    def connect_to_port(self):
+        """Connect to the selected serial port"""
+        selection = self.SerialPortList.curselection()
+        if not selection:
+            self.status_label.config(text="Please select a serial port", fg="red")
+            return
+        
+        port_index = selection[0]
+        if port_index >= len(self.available_ports):
+            self.status_label.config(text="No valid port selected", fg="red")
+            return
+        
+        port = self.available_ports[port_index]
+        
+        try:
+            self.serial_connection = serial.Serial(port, 9600, timeout=1)
+            self.connect_btn.config(text="Disconnect", bg="#e74c3c")
+            self.status_label.config(text=f"Connected to {port}", fg="#00FF00")
+        except Exception as e:
+            self.status_label.config(text=f"Connection failed: {str(e)}", fg="red")
+            self.serial_connection = None
+
+    def disconnect_from_port(self):
+        """Disconnect from the current serial port"""
+        if self.serial_connection:
+            try:
+                self.serial_connection.close()
+            except:
+                pass
+            self.serial_connection = None
+            self.connect_btn.config(text="Connect", bg="#555")
+            self.status_label.config(text="Disconnected", fg="#00FF00")
 
 if __name__ == "__main__":
     root = tk.Tk()
