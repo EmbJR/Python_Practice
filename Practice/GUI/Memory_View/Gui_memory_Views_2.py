@@ -1,6 +1,10 @@
 import tkinter as tk
 import serial
 import serial.tools.list_ports
+import threading
+import time
+import struct
+import queue
 
 class MemoryVisualizer:
     def __init__(self, root):
@@ -20,6 +24,17 @@ class MemoryVisualizer:
         self.serial_connection = None
         self.available_ports = []
         
+        # Memory read state
+        self.is_reading = False
+        self.read_complete = False
+        self.read_error = None
+        self.chunks_received = 0
+        self.read_thread = None
+        self.stop_reading = threading.Event()
+        
+        # Queue for thread-safe GUI updates
+        self.update_queue = queue.Queue()
+        
         # MOCK DATA: Fill specific areas to test layout accuracy
         # Fill Page 5, Bytes 10-20
         for b in range(10, 21):
@@ -30,6 +45,9 @@ class MemoryVisualizer:
                 self.memory_buffer[p][b] = 0xBB
         
         self.setup_ui()
+        
+        # Start processing update queue
+        self.root.after(100, self.process_update_queue)
 
     def setup_ui(self):
         # Control Panel
@@ -57,8 +75,20 @@ class MemoryVisualizer:
         self.connect_btn = tk.Button(serial_btn_frame, text="Connect", command=self.toggle_connection, bg="#555", fg="white", width=12)
         self.connect_btn.pack(pady=2)
         
-        # Initial port refresh
-        self.refresh_serial_ports()
+        # Get Memory button - placed below Connect button
+        self.get_memory_btn = tk.Button(serial_btn_frame, text="Get_Memory", command=self.start_get_memory, bg="#3498db", fg="white", width=12, state=tk.DISABLED)
+        self.get_memory_btn.pack(pady=2)
+        
+        # Progress bar for memory read operation
+        progress_frame = tk.Frame(control_frame, bg="#333")
+        progress_frame.pack(side=tk.LEFT, padx=10)
+        
+        tk.Label(progress_frame, text="Memory Progress:", fg="white", bg="#333").pack(anchor=tk.W)
+        self.progress_bar = tk.Canvas(progress_frame, width=150, height=20, bg="#1e1e1e", highlightthickness=0)
+        self.progress_bar.pack(pady=2)
+        self.progress_fill = None
+        self.progress_label = tk.Label(progress_frame, text="0/2048 chunks", fg="#00FF00", bg="#333", font=("Arial", 8))
+        self.progress_label.pack()
         
         # Zoom controls
         tk.Label(control_frame, text="Zoom:", fg="white", bg="#333").pack(side=tk.LEFT, padx=5)
@@ -274,15 +304,24 @@ class MemoryVisualizer:
         port = self.available_ports[port_index]
         
         try:
-            self.serial_connection = serial.Serial(port, 9600, timeout=1)
+            self.serial_connection = serial.Serial(port, 115200, timeout=1)
             self.connect_btn.config(text="Disconnect", bg="#e74c3c")
             self.status_label.config(text=f"Connected to {port}", fg="#00FF00")
+            # Enable Get_Memory button when connected
+            self.get_memory_btn.config(state=tk.NORMAL)
         except Exception as e:
             self.status_label.config(text=f"Connection failed: {str(e)}", fg="red")
             self.serial_connection = None
 
     def disconnect_from_port(self):
         """Disconnect from the current serial port"""
+        # Stop any ongoing read operation
+        if self.is_reading:
+            self.stop_reading.set()
+            if self.read_thread and self.read_thread.is_alive():
+                self.read_thread.join(timeout=2)
+            self.is_reading = False
+        
         if self.serial_connection:
             try:
                 self.serial_connection.close()
@@ -290,7 +329,252 @@ class MemoryVisualizer:
                 pass
             self.serial_connection = None
             self.connect_btn.config(text="Connect", bg="#555")
+            self.get_memory_btn.config(state=tk.DISABLED, bg="#3498db", text="Get_Memory")
             self.status_label.config(text="Disconnected", fg="#00FF00")
+            
+            # Reset progress bar
+            self.update_progress_bar(0, 2048)
+
+    def process_update_queue(self):
+        """Process updates from the reading thread"""
+        try:
+            while True:
+                update_type, data = self.update_queue.get_nowait()
+                
+                if update_type == "progress":
+                    chunks_received, total_chunks = data
+                    self.update_progress_bar(chunks_received, total_chunks)
+                elif update_type == "complete":
+                    self.read_complete = True
+                    self.is_reading = False
+                    self.get_memory_btn.config(state=tk.NORMAL, bg="#3498db", text="Get_Memory")
+                    self.status_label.config(text=f"Memory read complete! {data} chunks received", fg="#00FF00")
+                    self.draw_memory()
+                elif update_type == "error":
+                    self.read_error = data
+                    self.is_reading = False
+                    self.get_memory_btn.config(state=tk.NORMAL, bg="#3498db", text="Get_Memory")
+                    self.status_label.config(text=f"Error: {data}", fg="red")
+                elif update_type == "memory_chunk":
+                    page_num, chunk_data = data
+                    # Update memory buffer with received chunk
+                    if page_num < self.PAGES and len(chunk_data) == self.BYTES_PER_PAGE:
+                        self.memory_buffer[page_num] = chunk_data
+        except queue.Empty:
+            pass
+        
+        # Continue checking for updates
+        if self.is_reading:
+            self.root.after(50, self.process_update_queue)
+
+    def update_progress_bar(self, chunks_received, total_chunks):
+        """Update the progress bar display"""
+        self.progress_label.config(text=f"{chunks_received}/{total_chunks} chunks")
+        
+        # Calculate fill width
+        max_width = 150
+        fill_width = int((chunks_received / total_chunks) * max_width) if total_chunks > 0 else 0
+        
+        # Delete old fill rectangle
+        if self.progress_fill:
+            self.progress_bar.delete(self.progress_fill)
+        
+        # Draw new fill rectangle
+        self.progress_fill = self.progress_bar.create_rectangle(
+            0, 0, fill_width, 20, fill="#2ECC71", outline=""
+        )
+
+    def calculate_crc16(self, data):
+        """Calculate CRC16 for the data (Modbus CRC16)"""
+        crc = 0xFFFF
+        for byte in data:
+            crc ^= byte
+            for _ in range(8):
+                if crc & 0x0001:
+                    crc = (crc >> 1) ^ 0xA001
+                else:
+                    crc >>= 1
+        return crc
+
+    def build_read_memory_command(self):
+        """Build the 'Read entire Memory' command according to protocol"""
+        # Command: 0x01 (Read entire Memory)
+        cmd = 0x01
+        
+        # Length is 1 byte (just the command)
+        length = 0x0001
+        
+        # Build data without header for CRC calculation
+        # Format: Length (2 bytes) + Cmd (1 byte)
+        data_for_crc = struct.pack('<HB', length, cmd)
+
+        print("-------------------------------------")
+        print(len(data_for_crc))
+        
+        # Calculate CRC16
+        crc = self.calculate_crc16(data_for_crc)
+        
+        # Build full packet: Header + CRC + Length + Cmd
+        # Header: 0xA5 (1 byte)
+        # CRC: 2 bytes
+        # Length: 2 bytes
+        # Cmd: 1 byte
+        packet = struct.pack('<B', 0xA5)  # Header
+        packet += struct.pack('<H', crc)   # CRC16
+        packet += struct.pack('<HB', length, cmd)  # Length (2 bytes) + Cmd (1 byte)
+        
+        return packet
+
+    def parse_memory_chunk(self, data):
+        """Parse a memory chunk response from controller"""
+        # Expected format: Header(1) + CRC(2) + Length(2) + Cmd(1) + Address(2) + Data(264)
+        # Total: 272 bytes minimum
+        if len(data) < 272:
+            return None, None, None
+        
+        try:
+            # Parse the packet
+            header = data[0]
+            if header != 0xA5:
+                return None, None, None
+            
+            # Check for error response (Cmd = 0x70)
+            cmd = data[5]
+            if cmd == 0x70:
+                return None, None, "Error response received from controller"
+            
+            # Extract address (bytes 6-7)
+            address = struct.unpack('<H', data[6:8])[0]
+            
+            # Page number is the address (each page is 264 bytes)
+            page_num = address
+            
+            # Extract data (bytes 8 to end)
+            chunk_data = list(data[8:272])
+            
+            return page_num, chunk_data, None
+        except Exception as e:
+            return None, None, str(e)
+
+    def receive_with_timeout(self, timeout_seconds=240):
+        """Receive data from serial port with timeout"""
+        start_time = time.time()
+        received_data = bytearray()
+        
+        # Expected response length: 272 bytes (Header + CRC + Length + Cmd + Address + Data)
+        expected_length = 272
+        
+        while (time.time() - start_time) < timeout_seconds:
+            if self.stop_reading.is_set():
+                return None, "Reading stopped by user"
+            
+            try:
+                # Check if data is available
+                if self.serial_connection.in_waiting > 0:
+                    # Read available bytes
+                    bytes_read = self.serial_connection.read(self.serial_connection.in_waiting)
+                    print(f"Received byte is {bytes_read} length is {bytes_read.len()}")
+                    received_data.extend(bytes_read)
+                    
+                    
+                    # Check if we have enough data
+                    if len(received_data) >= expected_length:
+                        # Return the first complete packet
+                        return received_data[:expected_length], None
+                else:
+                    # No data available, small delay to prevent CPU spinning
+                    time.sleep(0.01)
+            except serial.SerialException as e:
+                return None, f"Serial error: {str(e)}"
+        
+        return None, "Timeout waiting for response"
+
+    def read_memory_worker(self):
+        """Worker thread for reading memory from controller"""
+        try:
+            # Send Read entire Memory command
+            cmd_packet = self.build_read_memory_command()
+            self.serial_connection.write(cmd_packet)
+            self.serial_connection.flush()
+            
+            # Reset counters
+            self.chunks_received = 0
+            max_chunks = 2048
+            timeout_seconds = 240  # 4 minutes
+            
+            # Wait for chunks
+            while self.chunks_received < max_chunks:
+                if self.stop_reading.is_set():
+                    break
+                
+                # Receive a chunk
+                chunk_data, error = self.receive_with_timeout(timeout_seconds)
+                
+                if error:
+                    # Check if it's just a timeout (no more data)
+                    if "Timeout" in error and self.chunks_received > 0:
+                        # Timeout is okay if we received some data
+                        break
+                    self.update_queue.put(("error", error))
+                    return
+                
+                if chunk_data is None:
+                    break
+                
+                # Parse the chunk
+                page_num, data, parse_error = self.parse_memory_chunk(chunk_data)
+                
+                if parse_error:
+                    if "Error response" in parse_error:
+                        self.update_queue.put(("error", parse_error))
+                    else:
+                        self.update_queue.put(("error", f"Parse error: {parse_error}"))
+                    return
+                
+                if page_num is not None and data is not None:
+                    # Update memory buffer
+                    self.update_queue.put(("memory_chunk", (page_num, data)))
+                    self.chunks_received += 1
+                    
+                    # Update progress
+                    self.update_queue.put(("progress", (self.chunks_received, max_chunks)))
+            
+            # Reading complete
+            self.update_queue.put(("complete", self.chunks_received))
+            
+        except Exception as e:
+            self.update_queue.put(("error", str(e)))
+
+    def start_get_memory(self):
+        """Start the memory read operation"""
+        if self.serial_connection is None or not self.serial_connection.is_open:
+            self.status_label.config(text="Please connect to a serial port first", fg="red")
+            return
+        
+        if self.is_reading:
+            self.status_label.config(text="Memory read already in progress", fg="orange")
+            return
+        
+        # Reset state
+        self.is_reading = True
+        self.read_complete = False
+        self.read_error = None
+        self.stop_reading.clear()
+        
+        # Disable button during reading
+        self.get_memory_btn.config(state=tk.DISABLED, bg="#f39c12", text="Reading...")
+        
+        # Reset memory buffer
+        self.memory_buffer = [[0xFF for _ in range(self.BYTES_PER_PAGE)] for _ in range(self.PAGES)]
+        
+        # Reset progress bar
+        self.update_progress_bar(0, 2048)
+        
+        # Start reading in a separate thread
+        self.read_thread = threading.Thread(target=self.read_memory_worker, daemon=True)
+        self.read_thread.start()
+        
+        self.status_label.config(text="Reading memory from controller...", fg="#00FF00")
 
 if __name__ == "__main__":
     root = tk.Tk()

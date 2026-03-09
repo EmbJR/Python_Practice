@@ -5,3 +5,21 @@ I want to add the below things in the "control_frame" fram.
 2> The refresh button to update the list "SerialPortList" for the available serial port.
 2> The connect button which if pressed then connects to the serial port which have been selected from "SerialPortList".
 3> The connect button changes to "Disconnect" button if the serial port is connected. If the disconnect button is pressed then the serial port will be disconnected.
+-----------------------------------------------
+I want to add the below logic to the existing code in "Gui_memory_Views_2.py" which are described as below.
+1> Add the button named "Get_Memory" just below the "Connect" button.
+2> When I press the "Get_Memory" button after the communication port connection, the GUI will transmit the "Read entire Memory" command on the controller(comm port).
+3> After sending the command, the GUI waits for one of the below event after firing the command to controller. 
+	1> Wait for Entire memory update from controller (upto 2048 chunks of reply). 
+	2> wait upto 4 minuits(Time can be variable).
+	3> Wait for any error received from controller.
+- The GUI will parallaly update the "self.memory_buffer" for each chunk received from controller.
+- The prograss bar should be displayed for the amount of memory in "self.memory_buffer" updated when the communication is on-going.
+- I want you to understand the file "Comm_Port_Interface_Protocol.txt" for the details of communication protocol for "Read entire Memory" command.
+---------------------------------------------
+I can able to connet to the port and able to send the data in "Gui_memory_Views_2.py" code. But there are some issue stated below.
+- The data sent by application for "Read entire Memory" command is "a5 00 48 01 00 01 00" which is not correct.
+- Here after the command ID for "Read entire Memory" which is "0x01", it has appended "0x00" which should not be there.
+- So the actual command should looks like "a5 E1 C0 01 00 01"
+
+Please correct it.
