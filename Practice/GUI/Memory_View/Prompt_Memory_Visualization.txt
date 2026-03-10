@@ -51,3 +51,8 @@ I want to update the "Gui_memory_Views_2.py" code for the following changes.
 2> Please correct the received data parsing logic according to the document "Comm_Port_Interface_Protocol.txt" including CRC checking.
 3> I want to revert the CRC value over serial for each chunks data gets in "Read entire Memory" command for the synchronization.
 The process is stated in "Comm_Port_Interface_Protocol.txt" file.
+----------------------------------------------
+I am facing one issue in the "Gui_memory_Views_2.py" code that during the receiving of memory chunks, 
+the progress bar is not updated with the progress. It remains stable.
+Also I suspect that the memory also not updated the values.
+Please correct the above error.

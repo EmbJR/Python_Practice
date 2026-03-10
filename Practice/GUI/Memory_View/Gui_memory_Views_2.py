@@ -397,6 +397,32 @@ class MemoryVisualizer:
                     crc >>= 1
         return crc
 
+    def verify_crc16(self, data, expected_crc):
+        """Verify CRC16 for the received data"""
+        calculated_crc = self.calculate_crc16(data)
+        # CRC is stored in little-endian format
+        if isinstance(expected_crc, int):
+            # Convert to little-endian bytes and back for comparison
+            expected_crc_bytes = expected_crc.to_bytes(2, 'little')
+            calculated_crc_bytes = calculated_crc.to_bytes(2, 'little')
+            return expected_crc_bytes == calculated_crc_bytes
+        return False
+
+    def build_sync_command(self, cmdval, crcVal):
+        """Build synchronization command for chunk request according to protocol
+        
+        Protocol: After receiving each chunk, GUI sends |0x01|CRC16|
+        Where 0x01 is the command (chunk index) and CRC16 is calculated on that byte
+        """
+        # Command is the chunk index (0x01 for first chunk after initial, etc.)
+        cmd = cmdval & 0xFF  # Ensure it's a single byte
+         
+        # Build packet: Cmd + CRC (no header for synchronization)
+        packet = struct.pack('<B', cmd)   # Command (chunk index)
+        packet += struct.pack('<H', crcVal)   # CRC16
+        
+        return packet
+
     def build_read_memory_command(self):
         """Build the 'Read entire Memory' command according to protocol"""
         # Command: 0x01 (Read entire Memory)
@@ -427,37 +453,55 @@ class MemoryVisualizer:
         return packet
 
     def parse_memory_chunk(self, data):
-        """Parse a memory chunk response from controller"""
+        """Parse a memory chunk response from controller with CRC verification"""
         # Expected format: Header(1) + CRC(2) + Length(2) + Cmd(1) + Address(2) + Data(264)
         # Total: 272 bytes minimum
         if len(data) < 272:
-            print("########## Len error")
-            return None, None, None
+            print("########## Len error: Expected 272 bytes, got", len(data))
+            return None, None, None, "Incomplete data received"
         try:
             # Parse the packet
             header = data[0]
             if header != 0xA5:
-                return None, None, None
+                print("########## Header mismatch: Expected 0xA5, got", hex(header))
+                return None, None, None,"Invalid header received"
+            
+            # Extract CRC16 from bytes 1-2 (little-endian)
+            received_crc = struct.unpack('<H', data[1:3])[0]
+            
+            # Extract Length (bytes 3-4, little-endian)
+            length = struct.unpack('<H', data[3:5])[0]
+            
+            # Extract Command (byte 5)
+            cmd = data[5]
             
             # Check for error response (Cmd = 0x70)
-            cmd = data[5]
             if cmd == 0x70:
-                return None, None, "Error response received from controller"
+                return None, None, None, "Error response received from controller"
             
             # Extract address (bytes 6-7)
             address = struct.unpack('<H', data[6:8])[0]
 
-            print(f"########## header = {header}, cmd = {cmd}, address = {address}")
+            # Verify CRC16
+            # CRC is calculated on: Length(2) + Cmd(1) + Address(2) + Data(264) = 269 bytes
+            data_for_crc = data[3:272]  # All data after CRC
+            calculated_crc = self.calculate_crc16(data_for_crc)
+            
+            if calculated_crc != received_crc:
+                print(f"########## CRC mismatch! Received: {hex(received_crc)}, Calculated: {hex(calculated_crc)}")
+                return None, None, None, f"CRC verification failed (Received: {hex(received_crc)}, Calculated: {hex(calculated_crc)})"
+            
+            print(f"########## header = {header}, cmd = {cmd}, address = {address}, CRC = {hex(received_crc)} - OK")
             
             # Page number is the address (each page is 264 bytes)
             page_num = address
             
-            # Extract data (bytes 8 to end)
+            # Extract data (bytes 8 to 271 = 264 bytes)
             chunk_data = list(data[8:272])
             
-            return page_num, chunk_data, None
+            return page_num, chunk_data, calculated_crc, None
         except Exception as e:
-            return None, None, str(e)
+            return None, None, None, str(e)
 
     def receive_with_timeout(self, timeout_seconds=240):
         """Receive data from serial port with timeout"""
@@ -498,17 +542,20 @@ class MemoryVisualizer:
         return None, "Timeout waiting for response"
 
     def read_memory_worker(self):
-        """Worker thread for reading memory from controller"""
+        """Worker thread for reading memory from controller with synchronization"""
         try:
             # Send Read entire Memory command
             cmd_packet = self.build_read_memory_command()
             self.serial_connection.write(cmd_packet)
             self.serial_connection.flush()
             
+            print(f"Sent initial read command: {cmd_packet.hex()}")
+            
             # Reset counters
             self.chunks_received = 0
             max_chunks = 2048
             timeout_seconds = 240  # 4 minutes
+            chunk_index = 1  # Start from chunk 1 (after initial response)
             
             # Wait for chunks
             while self.chunks_received < max_chunks:
@@ -522,6 +569,7 @@ class MemoryVisualizer:
                     # Check if it's just a timeout (no more data)
                     if "Timeout" in error and self.chunks_received > 0:
                         # Timeout is okay if we received some data
+                        print(f"Timeout after receiving {self.chunks_received} chunks")
                         break
                     self.update_queue.put(("error", error))
                     return
@@ -529,8 +577,8 @@ class MemoryVisualizer:
                 if chunk_data is None:
                     break
                 
-                # Parse the chunk
-                page_num, data, parse_error = self.parse_memory_chunk(chunk_data)
+                # Parse the chunk with CRC verification
+                page_num, data, CRCVal, parse_error = self.parse_memory_chunk(chunk_data)
                 
                 if parse_error:
                     if "Error response" in parse_error:
@@ -546,6 +594,17 @@ class MemoryVisualizer:
                     
                     # Update progress
                     self.update_queue.put(("progress", (self.chunks_received, max_chunks)))
+                    
+                    # Send synchronization command to request next chunk
+                    # Protocol: After each chunk, GUI sends |0x01|CRC16| for next chunk
+                    # The chunk_index starts from 1 and increments for each subsequent chunk
+                    if self.chunks_received < max_chunks:
+                        sync_packet = self.build_sync_command(chunk_data[5], CRCVal)
+                        print(f"CRC value sent ----------- {CRCVal}")
+                        self.serial_connection.write(sync_packet)
+                        self.serial_connection.flush()
+                        print(f"Sent sync command for chunk {chunk_index}: {sync_packet.hex()}")
+                        chunk_index += 1
             
             # Reading complete
             self.update_queue.put(("complete", self.chunks_received))
