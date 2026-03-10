@@ -27,7 +27,7 @@ Length:-   						   | 1 byte | 2 bytes | 2 bytes |1 bytes | n bytes|
 *****************************************************************************
 >> From GUI to controller
 -------------------------------------------------------------------------------------------------
-Transmitt Data format:- 	|0xA5  | CRC16 |0x00,0x01|  0x01  |
+Transmitt Data format:- 	|0xA5  | CRC16 |0x00,0x01|  0x01  |				(CRC16 is of 3 bytes -> 01 00 01)
 							|1 byte|2 bytes| 2 bytes |1 bytes |
 							
 Receive from controller:- 	|  0xA5  |  CRC16 |0x01,0x0B|  0x01 |0x0,0xD0 |	Memory Data |
@@ -43,15 +43,19 @@ Receive from controller:- 	|  0xA5  |  CRC16 |0x01,0x0B|  0x01 |0x0,0xD0 |	Memor
 - The below example shows the command fired by GUI to microcontroler at once and the microcontroller will revert the entire memory of 2048 pages buffer with chunks of 264 bytes values repeating about 2048 times.
 -------------------------------------------------------------------------------------------------
 >> From GUI to controller for requesting memory:- 	|0xA5|CRC16|0x00,0x01|0x01|
->> From controller to GUI for memory data:- 		|0xA5|CRC16|0x01,0x0B|0x00,0x01|264 bytes of data|
->> From controller to GUI for memory data:- 		|0xA5|CRC16|0x01,0x0B|0x00,0x02|264 bytes of data|
->> From controller to GUI for memory data:- 		|0xA5|CRC16|0x01,0x0B|0x00,0x03|264 bytes of data|
+>> From controller to GUI for memory data:- 		|0xA5|CRC16|0x01,0x0B|0x01|0x00,0x01|264 bytes of data|
+>> From GUI to controller for synchronization:- 	|0x01|CRC16|
+>> From controller to GUI for memory data:- 		|0xA5|CRC16|0x01,0x0B|0x01|0x00,0x02|264 bytes of data|
+>> From GUI to controller for synchronization:- 	|0x01|CRC16|
+>> From controller to GUI for memory data:- 		|0xA5|CRC16|0x01,0x0B|0x01|0x00,0x03|264 bytes of data|
+>> From GUI to controller for synchronization:- 	|0x01|CRC16|
 													  :	:	:	:	:	:	:	:	:	:	:	:	:
 													  :	:	:	:	:	:	:	:	:	:	:	:	:
 													  :	:	:	:	:	:	:	:	:	:	:	:	:
->> From controller to GUI for memory data:- 		|0xA5|CRC16|0x01,0x0B|0x08,0x00|264 bytes of data|
+>> From controller to GUI for memory data:- 		|0xA5|CRC16|0x01,0x0B|0x01|0x08,0x00|264 bytes of data|
+>> From GUI to controller for synchronization:- 	|0x01|CRC16|
 
->> From controller to GUI for Reading error:- 		|0xA5|0x00,0x03|0x70|CRC16|
+>> From controller to GUI for Reading error:- 		|0xA5|CRC16|0x00,0x01|0x70|
 --------------------------------------------------------------------------------------------------
 
 

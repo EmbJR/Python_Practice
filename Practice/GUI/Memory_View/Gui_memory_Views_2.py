@@ -342,6 +342,7 @@ class MemoryVisualizer:
                 update_type, data = self.update_queue.get_nowait()
                 
                 if update_type == "progress":
+                    print("^^^^ Progress")
                     chunks_received, total_chunks = data
                     self.update_progress_bar(chunks_received, total_chunks)
                 elif update_type == "complete":
@@ -430,8 +431,8 @@ class MemoryVisualizer:
         # Expected format: Header(1) + CRC(2) + Length(2) + Cmd(1) + Address(2) + Data(264)
         # Total: 272 bytes minimum
         if len(data) < 272:
+            print("########## Len error")
             return None, None, None
-        
         try:
             # Parse the packet
             header = data[0]
@@ -445,6 +446,8 @@ class MemoryVisualizer:
             
             # Extract address (bytes 6-7)
             address = struct.unpack('<H', data[6:8])[0]
+
+            print(f"########## header = {header}, cmd = {cmd}, address = {address}")
             
             # Page number is the address (each page is 264 bytes)
             page_num = address
@@ -464,25 +467,30 @@ class MemoryVisualizer:
         # Expected response length: 272 bytes (Header + CRC + Length + Cmd + Address + Data)
         expected_length = 272
         
+        # Flush input buffer to discard any stale data before reading response
+        self.serial_connection.reset_input_buffer()
+        
         while (time.time() - start_time) < timeout_seconds:
             if self.stop_reading.is_set():
                 return None, "Reading stopped by user"
             
             try:
-                # Check if data is available
-                if self.serial_connection.in_waiting > 0:
-                    # Read available bytes
-                    bytes_read = self.serial_connection.read(self.serial_connection.in_waiting)
-                    print(f"Received byte is {bytes_read} length is {bytes_read.len()}")
+                # Use read with timeout instead of in_waiting for more reliable reading
+                # This prevents blocking issues with some USB-serial adapters
+                bytes_read = self.serial_connection.read(272)  # Read up to expected bytes with timeout
+                
+                if bytes_read:
+                    print("#####################################")
+                    print(f"Received byte is {bytes_read} length is {len(bytes_read)}")
                     received_data.extend(bytes_read)
-                    
+                    print("#####################################")
                     
                     # Check if we have enough data
                     if len(received_data) >= expected_length:
                         # Return the first complete packet
                         return received_data[:expected_length], None
                 else:
-                    # No data available, small delay to prevent CPU spinning
+                    # No data received within timeout, small delay to prevent CPU spinning
                     time.sleep(0.01)
             except serial.SerialException as e:
                 return None, f"Serial error: {str(e)}"

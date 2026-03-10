@@ -23,3 +23,31 @@ I can able to connet to the port and able to send the data in "Gui_memory_Views_
 - So the actual command should looks like "a5 E1 C0 01 00 01"
 
 Please correct it.
+----------------------------------------------
+I cannot able to get the data from serial connection and my code stocks at the below line. Please correct it.
+
+try:
+                # Check if data is available
+                if self.serial_connection.in_waiting > 0:
+                    print("#####################################")
+                    # Read available bytes
+                    bytes_read = self.serial_connection.read(self.serial_connection.in_waiting)
+                    print(f"Received byte is {bytes_read} length is {bytes_read.len()}")
+                    received_data.extend(bytes_read)
+                    print("#####################################")
+                    
+                    # Check if we have enough data
+                    if len(received_data) >= expected_length:
+                        # Return the first complete packet
+                        return received_data[:expected_length], None
+                else:
+                    # No data available, small delay to prevent CPU spinning
+                    time.sleep(0.01)
+            except serial.SerialException as e:
+                return None, f"Serial error: {str(e)}"
+----------------------------------------------
+I want to update the "Gui_memory_Views_2.py" code for the following changes.
+1> Please understand the protocol from "Comm_Port_Interface_Protocol.txt" document and cross check it with current code logic and change/correct the logic of code. 
+2> Please correct the received data parsing logic according to the document "Comm_Port_Interface_Protocol.txt" including CRC checking.
+3> I want to revert the CRC value over serial for each chunks data gets in "Read entire Memory" command for the synchronization.
+The process is stated in "Comm_Port_Interface_Protocol.txt" file.
