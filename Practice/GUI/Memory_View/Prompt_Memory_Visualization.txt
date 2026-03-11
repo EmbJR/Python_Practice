@@ -56,3 +56,12 @@ I am facing one issue in the "Gui_memory_Views_2.py" code that during the receiv
 the progress bar is not updated with the progress. It remains stable.
 Also I suspect that the memory also not updated the values.
 Please correct the above error.
+----------------------------------------------
+I am facing one issue in the "Gui_memory_Views_2.py" code stated below.
+1> When communicating to controller and receiving the continous chunk data, sometimes the application failes to send the synch reply
+and due to which the command stucks in between the transfer.
+Please identify and resolve the issue.
+----------------------------------------------
+Still the same result, the application stucks at rangome chunk. Can we add some delay before sending the synch reply or send the synch reply after confirming some key points such as serial communicatin is ready to accept the new data?
+----------------------------------------------
+Please detect any improvement in serial communication related code as I am really not able to communicate more than 10-12 chunks right now and gets failed to cumminicate after that.

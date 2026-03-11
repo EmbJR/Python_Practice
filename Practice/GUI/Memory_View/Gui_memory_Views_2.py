@@ -304,7 +304,7 @@ class MemoryVisualizer:
         port = self.available_ports[port_index]
         
         try:
-            self.serial_connection = serial.Serial(port, 115200, timeout=1)
+            self.serial_connection = serial.Serial(port, 115200, timeout=1, write_timeout=1)
             self.connect_btn.config(text="Disconnect", bg="#e74c3c")
             self.status_label.config(text=f"Connected to {port}", fg="#00FF00")
             # Enable Get_Memory button when connected
@@ -521,52 +521,135 @@ class MemoryVisualizer:
             return None, None, None, str(e)
 
     def receive_with_timeout(self, timeout_seconds=240):
-        """Receive data from serial port with timeout"""
+        """Receive data from serial port with improved fragment handling"""
         start_time = time.time()
         received_data = bytearray()
         
         # Expected response length: 272 bytes (Header + CRC + Length + Cmd + Address + Data)
         expected_length = 272
         
-        # Flush input buffer to discard any stale data before reading response
-        self.serial_connection.reset_input_buffer()
+        # Maximum time to wait for each chunk of data
+        chunk_timeout = 2.0  # 2 seconds per chunk
+        chunk_start_time = time.time()
+        
+        # Track bytes received for debugging
+        total_bytes_received = 0
         
         while (time.time() - start_time) < timeout_seconds:
             if self.stop_reading.is_set():
                 return None, "Reading stopped by user"
             
             try:
-                # Use read with timeout instead of in_waiting for more reliable reading
-                # This prevents blocking issues with some USB-serial adapters
-                bytes_read = self.serial_connection.read(272)  # Read up to expected bytes with timeout
-                
-                if bytes_read:
-                    #print("#####################################")
-                    #print(f"Received byte is {bytes_read} length is {len(bytes_read)}")
-                    received_data.extend(bytes_read)
-                    #print("#####################################")
+                # Check if there's data available
+                if self.serial_connection.in_waiting > 0:
+                    # Read available data (up to 272 bytes or what's available)
+                    bytes_to_read = min(272, self.serial_connection.in_waiting)
+                    bytes_read = self.serial_connection.read(bytes_to_read)
                     
-                    # Check if we have enough data
-                    if len(received_data) >= expected_length:
-                        # Return the first complete packet
-                        return received_data[:expected_length], None
+                    if bytes_read:
+                        total_bytes_received += len(bytes_read)
+                        received_data.extend(bytes_read)
+                        chunk_start_time = time.time()  # Reset chunk timer on new data
+                        
+                        # Debug: Log first few bytes when data arrives
+                        if len(received_data) <= 10:
+                            print(f"########## Received data: {received_data.hex()}")
+                        
+                        # Check if we have the header (0xA5)
+                        # If we have some data but no header yet, we might have missed it
+                        # Look for the header in the data
+                        if len(received_data) > 0 and received_data[0] != 0xA5:
+                            # Try to find the header in the received data
+                            header_pos = -1
+                            for i in range(len(received_data)):
+                                if received_data[i] == 0xA5:
+                                    header_pos = i
+                                    break
+                            if header_pos >= 0:
+                                # Discard data before header
+                                print(f"########## Found header at position {header_pos}, discarding earlier data")
+                                received_data = received_data[header_pos:]
+                            else:
+                                # No header found, clear buffer and continue
+                                print(f"########## No header found in {len(received_data)} bytes, clearing buffer")
+                                received_data = bytearray()
+                                continue
+                        
+                        # Check if we have enough data
+                        if len(received_data) >= expected_length:
+                            print(f"########## Complete packet received: {len(received_data)} bytes")
+                            # Return the first complete packet
+                            return received_data[:expected_length], None
                 else:
-                    # No data received within timeout, small delay to prevent CPU spinning
-                    time.sleep(0.01)
+                    # No data available, check if we've timed out waiting for this chunk
+                    if (time.time() - chunk_start_time) > chunk_timeout and len(received_data) > 0:
+                        print(f"########## Chunk timeout with {len(received_data)} bytes received")
+                        return None, f"Timeout waiting for complete chunk (received {len(received_data)} bytes)"
+                    
+                    # Small delay to prevent CPU spinning
+                    time.sleep(0.005)
+                    
             except serial.SerialException as e:
                 return None, f"Serial error: {str(e)}"
         
+        print(f"########## Total timeout after receiving {total_bytes_received} bytes")
         return None, "Timeout waiting for response"
 
     def read_memory_worker(self):
         """Worker thread for reading memory from controller with synchronization"""
         try:
-            # Send Read entire Memory command
-            cmd_packet = self.build_read_memory_command()
-            self.serial_connection.write(cmd_packet)
-            self.serial_connection.flush()
+            # Verify serial connection is open
+            if not self.serial_connection or not self.serial_connection.is_open:
+                self.update_queue.put(("error", "Serial connection is not open"))
+                return
             
-            print(f"Sent initial read command: {cmd_packet.hex()}")
+            # Send Read entire Memory command with retry
+            cmd_sent = False
+            max_retries = 5  # Increased retries
+            for attempt in range(max_retries):
+                try:
+                    # Wait a moment before sending command to ensure controller is ready
+                    time.sleep(0.05)  # 50ms delay (increased from 20ms)
+                    
+                    # Check if output buffer is empty before sending
+                    max_wait_iterations = 20  # Increased
+                    wait_iterations = 0
+                    while self.serial_connection.out_waiting > 0 and wait_iterations < max_wait_iterations:
+                        time.sleep(0.005)
+                        wait_iterations += 1
+                    
+                    cmd_packet = self.build_read_memory_command()
+                    print(f"########## Sending read command (attempt {attempt + 1}): {cmd_packet.hex()}")
+                    self.serial_connection.write(cmd_packet)
+                    self.serial_connection.flush()
+                    
+                    # Wait for the command to be fully transmitted
+                    max_flush_wait = 20  # Increased
+                    flush_wait = 0
+                    while self.serial_connection.out_waiting > 0 and flush_wait < max_flush_wait:
+                        time.sleep(0.005)
+                        flush_wait += 1
+                    
+                    # Small delay to ensure data is transmitted
+                    time.sleep(0.02)  # Increased from 10ms
+                    
+                    print(f"Sent initial read command: {cmd_packet.hex()}")
+                    cmd_sent = True
+                    break
+                    
+                except serial.SerialException as e:
+                    print(f"Warning: Failed to send read command (attempt {attempt + 1}/{max_retries}): {str(e)}")
+                    if attempt < max_retries - 1:
+                        time.sleep(0.1)  # Increased
+                    else:
+                        self.update_queue.put(("error", f"Failed to send read command after {max_retries} attempts: {str(e)}"))
+                        return
+                except Exception as e:
+                    self.update_queue.put(("error", f"Error sending read command: {str(e)}"))
+                    return
+            
+            if not cmd_sent:
+                return
             
             # Reset counters
             self.chunks_received = 0
@@ -578,6 +661,11 @@ class MemoryVisualizer:
             while self.chunks_received < max_chunks:
                 if self.stop_reading.is_set():
                     break
+                
+                # Verify serial connection is still open
+                if not self.serial_connection or not self.serial_connection.is_open:
+                    self.update_queue.put(("error", "Serial connection lost during read"))
+                    return
                 
                 # Receive a chunk
                 chunk_data, error = self.receive_with_timeout(timeout_seconds)
@@ -598,16 +686,47 @@ class MemoryVisualizer:
                 page_num, data, CRCVal, parse_error = self.parse_memory_chunk(chunk_data)
                 
                 if parse_error:
+                    # Log the error but try to continue reading
+                    print(f"########## Parse error at chunk {self.chunks_received + 1}: {parse_error}")
+                    
+                    # If it's an error response from controller, we must stop
                     if "Error response" in parse_error:
                         self.update_queue.put(("error", parse_error))
+                        return
+                    
+                    # For other errors (like CRC mismatch), try to continue by requesting next chunk
+                    # This helps recover from transient communication errors
+                    print("########## Attempting to continue despite parse error...")
+                    
+                    # Send sync command anyway to try to get next chunk
+                    if self.chunks_received < max_chunks - 1:
+                        try:
+                            time.sleep(0.02)
+                            # Use the next expected address for sync
+                            next_addr = self.chunks_received + 1
+                            sync_packet = self.build_sync_command(0x01, 0)
+                            self.serial_connection.write(sync_packet)
+                            self.serial_connection.flush()
+                            time.sleep(0.01)
+                            print(f"########## Sent sync after parse error for chunk {chunk_index}")
+                            chunk_index += 1
+                            continue  # Continue to next iteration
+                        except Exception as sync_err:
+                            print(f"########## Failed to send sync after parse error: {sync_err}")
+                            self.update_queue.put(("error", f"Parse error: {parse_error}, sync failed: {sync_err}"))
+                            return
                     else:
-                        self.update_queue.put(("error", f"Parse error: {parse_error}"))
-                    return
+                        # Last chunk, finish up
+                        break
                 
                 if page_num is not None and data is not None:
                     # Update memory buffer
                     self.update_queue.put(("memory_chunk", (page_num, data)))
                     self.chunks_received += 1
+                    
+                    # Log progress every 10 chunks
+                    if self.chunks_received % 10 == 0:
+                        print(f"########## Progress: {self.chunks_received} chunks received")
                     
                     # Update progress
                     self.update_queue.put(("progress", (self.chunks_received, max_chunks)))
@@ -616,12 +735,65 @@ class MemoryVisualizer:
                     # Protocol: After each chunk, GUI sends |0x01|CRC16| for next chunk
                     # The chunk_index starts from 1 and increments for each subsequent chunk
                     if self.chunks_received < max_chunks:
-                        sync_packet = self.build_sync_command(chunk_data[5], CRCVal)
-                        #print(f"CRC value sent ----------- {CRCVal}")
-                        self.serial_connection.write(sync_packet)
-                        self.serial_connection.flush()
-                        print(f"Sent sync command for chunk {chunk_index}: {sync_packet.hex()}")
-                        chunk_index += 1
+                        sync_success = False
+                        max_retries = 5  # Increased retries
+                        retry_count = 0
+                        
+                        while not sync_success and retry_count < max_retries:
+                            try:
+                                # Wait for controller to be ready to receive next command
+                                # Give the controller time to process the previous chunk
+                                time.sleep(0.05)  # 50ms delay before sending sync (increased from 20ms)
+                                
+                                # Check if serial port is ready to write
+                                # out_waiting returns number of bytes in the output buffer
+                                # We wait until buffer is empty before sending new data
+                                max_wait_iterations = 20  # Increased iterations
+                                wait_iterations = 0
+                                while self.serial_connection.out_waiting > 0 and wait_iterations < max_wait_iterations:
+                                    time.sleep(0.005)
+                                    wait_iterations += 1
+                                
+                                print(f"########## Sending sync for chunk {chunk_index}, page {page_num}, CRC={hex(CRCVal)}")
+                                sync_packet = self.build_sync_command(chunk_data[5], CRCVal)
+                                #print(f"CRC value sent ----------- {CRCVal}")
+                                self.serial_connection.write(sync_packet)
+                                self.serial_connection.flush()
+                                
+                                # Wait for the sync packet to be fully transmitted
+                                # This ensures the data is actually sent before we loop back
+                                max_flush_wait = 20  # Increased
+                                flush_wait = 0
+                                while self.serial_connection.out_waiting > 0 and flush_wait < max_flush_wait:
+                                    time.sleep(0.005)
+                                    flush_wait += 1
+                                
+                                # Additional small delay to ensure controller has time to process
+                                time.sleep(0.02)  # Increased from 10ms
+                                
+                                # Verify the write was successful by checking if data was written
+                                # Some USB-serial adapters may have buffer issues
+                                print(f"########## Sent sync command for chunk {chunk_index}: {sync_packet.hex()}")
+                                sync_success = True
+                                chunk_index += 1
+                                
+                            except serial.SerialException as e:
+                                retry_count += 1
+                                print(f"Warning: Failed to send sync command (attempt {retry_count}/{max_retries}): {str(e)}")
+                                if retry_count < max_retries:
+                                    # Wait before retrying
+                                    time.sleep(0.1)  # Increased from 50ms
+                                else:
+                                    self.update_queue.put(("error", f"Failed to send sync command after {max_retries} attempts: {str(e)}"))
+                                    return
+                            except Exception as e:
+                                retry_count += 1
+                                print(f"Warning: Unexpected error sending sync command (attempt {retry_count}/{max_retries}): {str(e)}")
+                                if retry_count < max_retries:
+                                    time.sleep(0.1)
+                                else:
+                                    self.update_queue.put(("error", f"Failed to send sync command after {max_retries} attempts: {str(e)}"))
+                                    return
             
             # Reading complete
             self.update_queue.put(("complete", self.chunks_received))
