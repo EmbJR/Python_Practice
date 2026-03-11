@@ -333,16 +333,24 @@ class MemoryVisualizer:
             self.status_label.config(text="Disconnected", fg="#00FF00")
             
             # Reset progress bar
-            self.update_progress_bar(0, 2048)
+            if self.progress_fill:
+                self.progress_bar.delete(self.progress_fill)
+            self.progress_fill = self.progress_bar.create_rectangle(
+                0, 0, 0, 20, fill="#2ECC71", outline=""
+            )
+            self.progress_label.config(text="0/2048 chunks")
 
     def process_update_queue(self):
         """Process updates from the reading thread"""
+        # Process all pending updates in the queue
+        updates_processed = 0
         try:
             while True:
                 update_type, data = self.update_queue.get_nowait()
+                updates_processed += 1
                 
                 if update_type == "progress":
-                    print("^^^^ Progress")
+                    #print("^^^^ Progress")
                     chunks_received, total_chunks = data
                     self.update_progress_bar(chunks_received, total_chunks)
                 elif update_type == "complete":
@@ -360,13 +368,16 @@ class MemoryVisualizer:
                     page_num, chunk_data = data
                     # Update memory buffer with received chunk
                     if page_num < self.PAGES and len(chunk_data) == self.BYTES_PER_PAGE:
-                        self.memory_buffer[page_num] = chunk_data
+                        self.memory_buffer[page_num] = list(chunk_data)  # Create a copy to ensure independent list
+                    # Redraw memory periodically (every 10 chunks) for visual feedback
+                    if updates_processed % 10 == 0:
+                        self.draw_memory()
         except queue.Empty:
             pass
         
-        # Continue checking for updates
-        if self.is_reading:
-            self.root.after(50, self.process_update_queue)
+        # Continue checking for updates periodically
+        # Keep processing even after reading is complete to handle any remaining queue items
+        self.root.after(50, self.process_update_queue)
 
     def update_progress_bar(self, chunks_received, total_chunks):
         """Update the progress bar display"""
@@ -376,14 +387,20 @@ class MemoryVisualizer:
         max_width = 150
         fill_width = int((chunks_received / total_chunks) * max_width) if total_chunks > 0 else 0
         
-        # Delete old fill rectangle
+        # Delete old fill rectangle if it exists
         if self.progress_fill:
             self.progress_bar.delete(self.progress_fill)
         
-        # Draw new fill rectangle
-        self.progress_fill = self.progress_bar.create_rectangle(
-            0, 0, fill_width, 20, fill="#2ECC71", outline=""
-        )
+        # Always draw new fill rectangle (create if progress_fill is None, which handles initial state)
+        if fill_width > 0:
+            self.progress_fill = self.progress_bar.create_rectangle(
+                0, 0, fill_width, 20, fill="#2ECC71", outline=""
+            )
+        else:
+            # Create empty rectangle as placeholder when no progress
+            self.progress_fill = self.progress_bar.create_rectangle(
+                0, 0, 0, 20, fill="#2ECC71", outline=""
+            )
 
     def calculate_crc16(self, data):
         """Calculate CRC16 for the data (Modbus CRC16)"""
@@ -524,10 +541,10 @@ class MemoryVisualizer:
                 bytes_read = self.serial_connection.read(272)  # Read up to expected bytes with timeout
                 
                 if bytes_read:
-                    print("#####################################")
-                    print(f"Received byte is {bytes_read} length is {len(bytes_read)}")
+                    #print("#####################################")
+                    #print(f"Received byte is {bytes_read} length is {len(bytes_read)}")
                     received_data.extend(bytes_read)
-                    print("#####################################")
+                    #print("#####################################")
                     
                     # Check if we have enough data
                     if len(received_data) >= expected_length:
@@ -600,7 +617,7 @@ class MemoryVisualizer:
                     # The chunk_index starts from 1 and increments for each subsequent chunk
                     if self.chunks_received < max_chunks:
                         sync_packet = self.build_sync_command(chunk_data[5], CRCVal)
-                        print(f"CRC value sent ----------- {CRCVal}")
+                        #print(f"CRC value sent ----------- {CRCVal}")
                         self.serial_connection.write(sync_packet)
                         self.serial_connection.flush()
                         print(f"Sent sync command for chunk {chunk_index}: {sync_packet.hex()}")
@@ -634,8 +651,14 @@ class MemoryVisualizer:
         # Reset memory buffer
         self.memory_buffer = [[0xFF for _ in range(self.BYTES_PER_PAGE)] for _ in range(self.PAGES)]
         
-        # Reset progress bar
-        self.update_progress_bar(0, 2048)
+        # Reset progress bar - delete old fill if exists and create new one
+        if self.progress_fill:
+            self.progress_bar.delete(self.progress_fill)
+            self.progress_fill = None
+        self.progress_fill = self.progress_bar.create_rectangle(
+            0, 0, 0, 20, fill="#2ECC71", outline=""
+        )
+        self.progress_label.config(text="0/2048 chunks")
         
         # Start reading in a separate thread
         self.read_thread = threading.Thread(target=self.read_memory_worker, daemon=True)
