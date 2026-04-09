@@ -237,6 +237,18 @@ class IntraTradHelper:
         total_qty_value = Entry(input_frame, font=("Arial", 10), width=15, state=tk.DISABLED, disabledbackground="lightyellow", disabledforeground="black")
         total_qty_value.grid(row=5, column=1, padx=5, pady=5)
         
+        # P&L-% Display (Read-only)
+        pnl_percent_label = Label(input_frame, text="P&L-%:", bg="white", font=("Arial", 10, "bold"))
+        pnl_percent_label.grid(row=6, column=0, sticky="w", padx=5, pady=5)
+        pnl_percent_value = Entry(input_frame, font=("Arial", 10), width=15, state=tk.DISABLED, disabledbackground="lightyellow", disabledforeground="black")
+        pnl_percent_value.grid(row=6, column=1, padx=5, pady=5)
+        
+        # P&L_Cash Display (Read-only)
+        pnl_cash_label = Label(input_frame, text="P&L_Cash:", bg="white", font=("Arial", 10, "bold"))
+        pnl_cash_label.grid(row=7, column=0, sticky="w", padx=5, pady=5)
+        pnl_cash_value = Entry(input_frame, font=("Arial", 10), width=15, state=tk.DISABLED, disabledbackground="lightyellow", disabledforeground="black")
+        pnl_cash_value.grid(row=7, column=1, padx=5, pady=5)
+        
         # Right side - listbox area
         list_frame = Frame(content_frame, bg="white")
         list_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=5)
@@ -260,6 +272,42 @@ class IntraTradHelper:
         data_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         listbox_scrollbar.config(command=data_listbox.yview)
         
+        # Function to calculate and update P&L values
+        def update_pnl_values():
+            try:
+                current_price = float(current_price_entry.get()) if current_price_entry.get() else 0
+                avg_price = float(avg_price_value.get()) if avg_price_value.get() else 0
+                total_investment = float(total_investment_value.get()) if total_investment_value.get() else 0
+                
+                # Calculate P&L %
+                if avg_price > 0:
+                    pnl_percent = ((current_price / avg_price) - 1) * 100
+                else:
+                    pnl_percent = 0
+                
+                # Calculate P&L Cash
+                pnl_cash = total_investment * (pnl_percent / 100)
+                
+                # Update P&L % display
+                pnl_percent_value.config(state=tk.NORMAL)
+                pnl_percent_value.delete(0, tk.END)
+                pnl_percent_value.insert(0, str(round(pnl_percent, 2)))
+                pnl_percent_value.config(state=tk.DISABLED)
+                
+                # Update P&L Cash display
+                pnl_cash_value.config(state=tk.NORMAL)
+                pnl_cash_value.delete(0, tk.END)
+                pnl_cash_value.insert(0, str(round(pnl_cash, 2)))
+                pnl_cash_value.config(state=tk.DISABLED)
+            except (ValueError, ZeroDivisionError):
+                pnl_percent_value.config(state=tk.NORMAL)
+                pnl_percent_value.delete(0, tk.END)
+                pnl_percent_value.config(state=tk.DISABLED)
+                
+                pnl_cash_value.config(state=tk.NORMAL)
+                pnl_cash_value.delete(0, tk.END)
+                pnl_cash_value.config(state=tk.DISABLED)
+        
         # Display existing data in listbox
         def refresh_listbox():
             data_listbox.delete(0, tk.END)
@@ -272,8 +320,9 @@ class IntraTradHelper:
                 data_listbox.insert(tk.END, f"#{idx+1}: P:{item['price']}, Q:{item['qty']}, Inv:{investment_value}")
             
             # Calculate average price - Reset to 0 if Total Qty is 0
+            # Weighted average: Total Investment / Total Qty
             if total_qty > 0:
-                avg_price = sum(item['price'] for item in self.button_data[button_id]) / len(self.button_data[button_id])
+                avg_price = total_investment / total_qty
             else:
                 avg_price = 0
             
@@ -292,12 +341,18 @@ class IntraTradHelper:
             total_qty_value.delete(0, tk.END)
             total_qty_value.insert(0, str(total_qty))
             total_qty_value.config(state=tk.DISABLED)
+            
+            # Update P&L values after updating all other values
+            update_pnl_values()
         
         refresh_listbox()
         
+        # Bind Current Price entry to update P&L values on change
+        current_price_entry.bind("<KeyRelease>", lambda e: update_pnl_values())
+        
         # Submit Button and action buttons frame
         button_frame = Frame(input_frame, bg="white")
-        button_frame.grid(row=6, column=0, columnspan=2, padx=5, pady=10)
+        button_frame.grid(row=8, column=0, columnspan=2, padx=5, pady=10)
         
         # Submit Button
         def on_submit():
