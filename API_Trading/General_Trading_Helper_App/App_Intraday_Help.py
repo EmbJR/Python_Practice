@@ -213,6 +213,30 @@ class IntraTradHelper:
         qty_entry = Entry(input_frame, font=("Arial", 10), width=15)
         qty_entry.grid(row=1, column=1, padx=5, pady=5)
         
+        # Current Price Label and Input
+        current_price_label = Label(input_frame, text="Current Price:", bg="white", font=("Arial", 10))
+        current_price_label.grid(row=2, column=0, sticky="w", padx=5, pady=5)
+        current_price_entry = Entry(input_frame, font=("Arial", 10), width=15)
+        current_price_entry.grid(row=2, column=1, padx=5, pady=5)
+        
+        # Total Investment Display (Read-only)
+        total_investment_label = Label(input_frame, text="Total Investment:", bg="white", font=("Arial", 10, "bold"))
+        total_investment_label.grid(row=3, column=0, sticky="w", padx=5, pady=5)
+        total_investment_value = Entry(input_frame, font=("Arial", 10), width=15, state=tk.DISABLED, disabledbackground="lightyellow", disabledforeground="black")
+        total_investment_value.grid(row=3, column=1, padx=5, pady=5)
+        
+        # Avg Price Display (Read-only)
+        avg_price_label = Label(input_frame, text="Avg Price:", bg="white", font=("Arial", 10, "bold"))
+        avg_price_label.grid(row=4, column=0, sticky="w", padx=5, pady=5)
+        avg_price_value = Entry(input_frame, font=("Arial", 10), width=15, state=tk.DISABLED, disabledbackground="lightyellow", disabledforeground="black")
+        avg_price_value.grid(row=4, column=1, padx=5, pady=5)
+        
+        # Total Qty Display (Read-only)
+        total_qty_label = Label(input_frame, text="Total Qty:", bg="white", font=("Arial", 10, "bold"))
+        total_qty_label.grid(row=5, column=0, sticky="w", padx=5, pady=5)
+        total_qty_value = Entry(input_frame, font=("Arial", 10), width=15, state=tk.DISABLED, disabledbackground="lightyellow", disabledforeground="black")
+        total_qty_value.grid(row=5, column=1, padx=5, pady=5)
+        
         # Right side - listbox area
         list_frame = Frame(content_frame, bg="white")
         list_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=5)
@@ -220,6 +244,10 @@ class IntraTradHelper:
         # Listbox title
         list_title = Label(list_frame, text="Submitted Data", bg="white", font=("Arial", 10, "bold"))
         list_title.pack(pady=5)
+        
+        # Investment value label
+        investment_label = Label(list_frame, text="(Price × Qty)", bg="white", font=("Arial", 8, "italic"))
+        investment_label.pack(pady=0)
         
         # Create listbox with scrollbar
         listbox_scroll_frame = Frame(list_frame, bg="white")
@@ -235,14 +263,41 @@ class IntraTradHelper:
         # Display existing data in listbox
         def refresh_listbox():
             data_listbox.delete(0, tk.END)
+            total_investment = 0
+            total_qty = 0
             for idx, item in enumerate(self.button_data[button_id]):
-                data_listbox.insert(tk.END, f"#{idx+1}: Price: {item['price']}, Qty: {item['qty']}")
+                investment_value = item['price'] * item['qty']
+                total_investment += investment_value
+                total_qty += item['qty']
+                data_listbox.insert(tk.END, f"#{idx+1}: P:{item['price']}, Q:{item['qty']}, Inv:{investment_value}")
+            
+            # Calculate average price - Reset to 0 if Total Qty is 0
+            if total_qty > 0:
+                avg_price = sum(item['price'] for item in self.button_data[button_id]) / len(self.button_data[button_id])
+            else:
+                avg_price = 0
+            
+            # Update display boxes
+            total_investment_value.config(state=tk.NORMAL)
+            total_investment_value.delete(0, tk.END)
+            total_investment_value.insert(0, str(total_investment))
+            total_investment_value.config(state=tk.DISABLED)
+            
+            avg_price_value.config(state=tk.NORMAL)
+            avg_price_value.delete(0, tk.END)
+            avg_price_value.insert(0, str(round(avg_price, 2)))
+            avg_price_value.config(state=tk.DISABLED)
+            
+            total_qty_value.config(state=tk.NORMAL)
+            total_qty_value.delete(0, tk.END)
+            total_qty_value.insert(0, str(total_qty))
+            total_qty_value.config(state=tk.DISABLED)
         
         refresh_listbox()
         
         # Submit Button and action buttons frame
         button_frame = Frame(input_frame, bg="white")
-        button_frame.grid(row=2, column=0, columnspan=2, padx=5, pady=10)
+        button_frame.grid(row=6, column=0, columnspan=2, padx=5, pady=10)
         
         # Submit Button
         def on_submit():
@@ -262,6 +317,7 @@ class IntraTradHelper:
                 # Clear input fields
                 price_entry.delete(0, tk.END)
                 qty_entry.delete(0, tk.END)
+                current_price_entry.delete(0, tk.END)
                 price_entry.focus()
                 
                 messagebox.showinfo(
