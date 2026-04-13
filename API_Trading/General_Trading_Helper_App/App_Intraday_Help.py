@@ -280,7 +280,7 @@ class IntraTradHelper:
                 total_investment = float(total_investment_value.get()) if total_investment_value.get() else 0
                 
                 # Calculate P&L %
-                if avg_price > 0:
+                if avg_price != 0:
                     pnl_percent = ((current_price / avg_price) - 1) * 100
                 else:
                     pnl_percent = 0
@@ -321,7 +321,7 @@ class IntraTradHelper:
             
             # Calculate average price - Reset to 0 if Total Qty is 0
             # Weighted average: Total Investment / Total Qty
-            if total_qty > 0:
+            if total_qty != 0:
                 avg_price = total_investment / total_qty
             else:
                 avg_price = 0
