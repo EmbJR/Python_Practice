@@ -268,7 +268,7 @@ class IntraTradHelper:
         listbox_scrollbar = Scrollbar(listbox_scroll_frame)
         listbox_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         
-        data_listbox = Listbox(listbox_scroll_frame, font=("Arial", 9), yscrollcommand=listbox_scrollbar.set)
+        data_listbox = Listbox(listbox_scroll_frame, font=("Arial", 12, "bold"), yscrollcommand=listbox_scrollbar.set)
         data_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         listbox_scrollbar.config(command=data_listbox.yview)
         
@@ -317,7 +317,7 @@ class IntraTradHelper:
                 investment_value = item['price'] * item['qty']
                 total_investment += investment_value
                 total_qty += item['qty']
-                data_listbox.insert(tk.END, f"#{idx+1}: P:{item['price']}, Q:{item['qty']}, Inv:{investment_value}")
+                data_listbox.insert(tk.END, f"{idx+1}> (Price:{item['price']}), (Qty:{item['qty']}), Inv:{investment_value}")
             
             # Calculate average price - Reset to 0 if Total Qty is 0
             # Weighted average: Total Investment / Total Qty
@@ -409,7 +409,7 @@ class IntraTradHelper:
             # Create edit dialog
             edit_window = Toplevel(self.root)
             edit_window.title(f"Edit Entry #{idx+1}")
-            edit_window.geometry("300x150")
+            edit_window.geometry("300x200")
             edit_window.transient(self.root)
             edit_window.grab_set()
             
