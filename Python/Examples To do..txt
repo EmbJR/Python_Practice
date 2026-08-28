@@ -31,6 +31,13 @@ User can enter as many strings to search and programm should only display the st
 	1. Taks to be done.
 	2. Frequenc of the task (Ex. daily, weekly, monthly, yearly..)
 	3. Date and Time of the task according to the above selected values.
-	4. Reminder Tone selecter / Any output selection.
+	4. Reminder Tone selecter / Any output selection
+	
+	
+	
+	
+	
+-----------------------------------------
+
 
 
